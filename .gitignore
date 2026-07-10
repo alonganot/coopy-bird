@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+server/data/
+
+# Local Claude Code settings (personal, not shared)
+.claude/settings.local.json
