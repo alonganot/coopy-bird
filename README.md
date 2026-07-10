@@ -1,17 +1,27 @@
 # Flappy Bird
 
-A neon-styled Flappy Bird clone with a persistent coin economy, a cosmetics shop, and nine unlockable skills — built as my first project with [Claude Code](https://claude.com/claude-code).
+A neon-styled Flappy Bird clone with a persistent coin economy, a cosmetics shop, nine unlockable skills, and a real-time multiplayer mode — built with [Claude Code](https://claude.com/claude-code).
 
-![stack](https://img.shields.io/badge/TypeScript-strict-3178c6) ![stack](https://img.shields.io/badge/Vite-5-646cff) ![stack](https://img.shields.io/badge/React-18-61dafb)
+![stack](https://img.shields.io/badge/TypeScript-strict-3178c6) ![stack](https://img.shields.io/badge/Vite-5-646cff) ![stack](https://img.shields.io/badge/React-18-61dafb) ![stack](https://img.shields.io/badge/WebSocket-ws-000000)
 
 ## Play
+
+**Single-player** (no server needed):
 
 ```bash
 npm install
 npm run dev
 ```
 
-Space (or tap) to flap. Score points to earn coins, then spend them in the in-game shop.
+**Multiplayer** — also run the game server, in a separate terminal:
+
+```bash
+npm run server
+```
+
+Then open the printed URL and hit "MULTIPLAYER" from the main screen. `npm run dev` runs with `--host`, and the client auto-detects the server's address, so anyone on the same network can join by opening your machine's printed network URL — no config needed.
+
+Space (or tap) to flap. Score points to earn coins, then spend them in the in-game shop. Works on mobile too — the canvas scales to any screen, and on-screen skill buttons appear automatically on touch devices.
 
 ## Features
 
@@ -21,22 +31,25 @@ Space (or tap) to flap. Score points to earn coins, then spend them in the in-ga
   - **Pipes** — 6 pipe designs, from a plain neon tube up to a crystal-spike prism column
   - **Scene** — 6 backgrounds (synthwave, jungle, ocean, desert, snow, volcano), each with its own ambient particle effect
   - **Skills** — 9 equippable abilities (max 3 at once): Dash, Shooting, Invisibility, Pocket Dimension (time slow), Shrink, Hover, Earthquake, Freeze Frame, and Shadow Clone (a mirrored clone that doubles your coins and can save you from one death)
-- Everything persists to `localStorage`, with backward-compatible save migration
+- **Multiplayer**: everyone connected marks "ready" before a match starts; the whole match shares one score; dying respawns you after 5s (with 3s of invulnerability) near whoever's doing best, unless nobody's left alive, in which case the match ends and the shared score is submitted to a leaderboard under everyone's own chosen name. All 9 skills stay active and are kept in sync across every player.
+- Fully responsive — scales to any screen size/aspect ratio, with touch controls and larger tap targets on mobile
+- Everything persists to `localStorage` (coins, unlocks, high scores, your multiplayer display name), with backward-compatible save migration
 
 ## Tech stack
 
-- **TypeScript** (strict mode) for the entire game engine
+- **TypeScript** (strict mode) end-to-end, client and server
 - **Vite + React** as a thin app shell — React mounts a single `<canvas>` and gets out of the way; the actual game loop, physics, and all rendering are hand-rolled Canvas2D, not DOM/JSX
+- **Node + `ws`** for the multiplayer server (`server/`, run via `tsx`, no build step) — a single authoritative process simulating the whole match and broadcasting state to every client, so nobody can desync
 - **Vitest** for save-migration unit tests
 
-See [`CLAUDE.md`](./CLAUDE.md) for the full module breakdown.
+See [`CLAUDE.md`](./CLAUDE.md) for the full module breakdown, including how the multiplayer server/client are structured.
 
 ## Built with Claude Code
 
-This project started as a single-session plain-JavaScript prototype and was later restructured with Claude Code end-to-end:
+This project started as a single-session plain-JavaScript prototype and has been iterated on with Claude Code end-to-end:
 
-- **Plan Mode** to scope and review a full rewrite: converting the original `game.js`/`skills.js` (sharing an implicit global scope) into strict TypeScript, split across ~25 cohesive modules (`state`, `persistence`, `engine`, `render/`, `shop/`, `skills/`), on a Vite + React build
-- **Subagents** (`Explore` and `Plan`) run in parallel to map the existing codebase's structure and coupling before any code was touched, and to design the target module layout
-- **`AskUserQuestion`** to settle the trade-offs that shaped the rewrite (build tooling, whether to touch the rendering approach, React vs. Preact, one-pass vs. staged migration)
-- A generated Vitest suite covering the `localStorage` save-migration logic, so existing players' progress survives the rewrite
-- Ongoing iteration on game balance and housekeeping (`.gitignore`, `CLAUDE.md` upkeep) as the project evolves
+- **Plan Mode** for every major addition — the original TypeScript/Vite/React rewrite, mobile responsiveness, and the multiplayer server — each scoped and reviewed as a plan before any code was written
+- **Subagents** (`Explore` and `Plan`) run in parallel to map the existing codebase's structure/coupling before touching it, and to design each new feature's architecture (e.g. confirming a server-authoritative model was the only way to keep multiplayer's shared pipes from desyncing across clients)
+- **`AskUserQuestion`** to settle trade-offs that shaped each feature (build tooling, React vs. Preact, single global multiplayer room vs. lobbies, whether skills stay active in multiplayer)
+- A generated Vitest suite covering the `localStorage` save-migration logic, so existing players' progress survives every rewrite
+- Ongoing iteration on gameplay rules, UI polish, and housekeeping (`.gitignore`, `CLAUDE.md`/README upkeep) as the project evolves
