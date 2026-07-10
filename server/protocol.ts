@@ -56,7 +56,11 @@ export type ServerMessage =
     }
   | { type: 'leaderboard'; entries: LeaderboardEntry[] };
 
-export const TICK_RATE_HZ = 30;
+// Matches single-player's ~60Hz requestAnimationFrame-driven physics step — both apply
+// fixed per-step increments (gravity, pipe speed, spawn cadence in ticks) rather than
+// scaling by elapsed time, so a lower tick rate here would make the whole match visibly
+// run in slow motion relative to single-player.
+export const TICK_RATE_HZ = 60;
 export const TICK_MS = 1000 / TICK_RATE_HZ;
 export const READY_COUNTDOWN_MS = 3000;
 export const RESPAWN_DELAY_MS = 5000;
