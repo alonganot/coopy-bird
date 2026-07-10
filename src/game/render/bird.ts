@@ -1,39 +1,52 @@
-import { getActiveColorItem } from '../shop/data';
-import { SHOP_SKILLS } from '../skills/data';
-import { isSkillActive } from '../skills/skills';
-import { skillState } from '../skills/state';
-import { world } from '../state';
+export interface BirdColor {
+  body: string;
+  wing: string;
+  glow: string;
+}
 
-export function drawBird(ctx: CanvasRenderingContext2D): void {
-  const b = world.bird;
-  const col = getActiveColorItem(world.gameData);
+export interface BirdEffects {
+  shrink: boolean;
+  invisible: boolean;
+  dash: { progress: number } | null;
+}
+
+export interface BirdRenderParams {
+  x: number;
+  y: number;
+  vy: number;
+  r: number;
+  thrustAnim: number;
+  color: BirdColor;
+  idleBob: number;
+  effects: BirdEffects;
+}
+
+export function drawBird(ctx: CanvasRenderingContext2D, p: BirdRenderParams): void {
+  const col = p.color;
   ctx.save();
-  const idleBob = world.state === 'idle' ? Math.sin(world.tick * 0.05) * 6 : 0;
-  ctx.translate(b.x, b.y + idleBob);
-  const angle = Math.max(-0.5, Math.min(Math.PI / 4, b.vy * 0.05));
+  ctx.translate(p.x, p.y + p.idleBob);
+  const angle = Math.max(-0.5, Math.min(Math.PI / 4, p.vy * 0.05));
   ctx.rotate(angle);
-  const shrinkScale = isSkillActive('shrink') ? 0.5 : 1;
+  const shrinkScale = p.effects.shrink ? 0.5 : 1;
   ctx.scale(shrinkScale, shrinkScale);
 
-  if (b.thrustAnim > 0) {
-    b.thrustAnim = Math.max(0, b.thrustAnim - 0.08);
-    const tg = ctx.createRadialGradient(-b.r - 5, 0, 0, -b.r - 5, 0, 20 * b.thrustAnim);
+  if (p.thrustAnim > 0) {
+    const tg = ctx.createRadialGradient(-p.r - 5, 0, 0, -p.r - 5, 0, 20 * p.thrustAnim);
     tg.addColorStop(0, col.body + 'ff');
     tg.addColorStop(0.4, col.wing + '99');
     tg.addColorStop(1, 'transparent');
     ctx.save();
-    ctx.globalAlpha = b.thrustAnim;
+    ctx.globalAlpha = p.thrustAnim;
     ctx.fillStyle = tg;
     ctx.beginPath();
-    ctx.ellipse(-b.r - 5, 0, 20 * b.thrustAnim, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(-p.r - 5, 0, 20 * p.thrustAnim, 6, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   }
 
   // Dash trail — ghost copies streaking behind
-  if (isSkillActive('dash')) {
-    const dashSkill = SHOP_SKILLS.find(s => s.id === 'dash')!;
-    const progress = skillState.activeTimer.dash / dashSkill.duration;
+  if (p.effects.dash) {
+    const progress = p.effects.dash.progress;
     for (let i = 1; i <= 5; i++) {
       ctx.save();
       ctx.globalAlpha = (0.18 * progress) * (1 - i / 6);
@@ -41,36 +54,36 @@ export function drawBird(ctx: CanvasRenderingContext2D): void {
       ctx.shadowColor = '#00f7ff';
       ctx.fillStyle = '#00f7ff';
       ctx.beginPath();
-      ctx.ellipse(-i * 14, 0, b.r, b.r - 3, 0, 0, Math.PI * 2);
+      ctx.ellipse(-i * 14, 0, p.r, p.r - 3, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
     // Full-width horizontal streak
     ctx.save();
     ctx.globalAlpha = 0.25 * progress;
-    const sg = ctx.createLinearGradient(-b.r - 80, 0, -b.r, 0);
+    const sg = ctx.createLinearGradient(-p.r - 80, 0, -p.r, 0);
     sg.addColorStop(0, 'transparent');
     sg.addColorStop(1, '#00f7ffcc');
     ctx.fillStyle = sg;
-    ctx.fillRect(-b.r - 80, -5, 80, 10);
+    ctx.fillRect(-p.r - 80, -5, 80, 10);
     ctx.restore();
   }
 
   ctx.save();
-  const invisActive = isSkillActive('invisibility');
+  const invisActive = p.effects.invisible;
   if (invisActive) ctx.globalAlpha = 0.4;
   ctx.shadowBlur = 18;
   ctx.shadowColor = invisActive ? '#a29bfe' : col.glow;
   ctx.fillStyle = invisActive ? '#a29bfe' : col.body;
   ctx.beginPath();
-  ctx.ellipse(0, 0, b.r, b.r - 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, p.r, p.r - 3, 0, 0, Math.PI * 2);
   ctx.fill();
-  const sheen = ctx.createRadialGradient(-4, -6, 1, 0, 0, b.r);
+  const sheen = ctx.createRadialGradient(-4, -6, 1, 0, 0, p.r);
   sheen.addColorStop(0, 'rgba(255,255,255,0.35)');
   sheen.addColorStop(1, 'rgba(255,255,255,0)');
   ctx.fillStyle = sheen;
   ctx.beginPath();
-  ctx.ellipse(0, 0, b.r, b.r - 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, 0, p.r, p.r - 3, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 

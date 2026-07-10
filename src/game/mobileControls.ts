@@ -1,16 +1,23 @@
-import { SHOP_SKILLS, type SkillId } from './skills/data';
-import { pressSkillSlot, releaseSkillSlot } from './input';
-import { isSkillVisuallyActive } from './skills/skills';
-import { skillState } from './skills/state';
-import { world } from './state';
-
 const SLOT_COUNT = 3;
+
+export interface SkillButtonSlot {
+  label: string;
+  color: string;
+  empty: boolean;
+}
+
+export interface SkillButtonsAdapter {
+  press(slot: number): void;
+  release(slot: number): void;
+  /** Returns null to hide the button for that slot (e.g. no skill equipped there). */
+  getSlot(slot: number): SkillButtonSlot | null;
+}
 
 function isTouchDevice(): boolean {
   return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 }
 
-export function attachSkillButtons(container: HTMLElement): { sync(): void; detach(): void } {
+export function attachSkillButtons(container: HTMLElement, adapter: SkillButtonsAdapter): { sync(): void; detach(): void } {
   if (!isTouchDevice()) {
     return { sync() {}, detach() {} };
   }
@@ -29,9 +36,9 @@ export function attachSkillButtons(container: HTMLElement): { sync(): void; deta
 
     const onPress = (e: PointerEvent) => {
       e.preventDefault();
-      pressSkillSlot(slot);
+      adapter.press(slot);
     };
-    const onRelease = () => releaseSkillSlot(slot);
+    const onRelease = () => adapter.release(slot);
 
     button.addEventListener('pointerdown', onPress);
     button.addEventListener('pointerup', onRelease);
@@ -52,21 +59,16 @@ export function attachSkillButtons(container: HTMLElement): { sync(): void; deta
 
   return {
     sync(): void {
-      const equipped = world.gameData.equippedOrder as SkillId[];
-      const inPlay = world.state === 'play';
       buttons.forEach((button, slot) => {
-        const id = equipped[slot];
-        if (!id || !inPlay) {
+        const info = adapter.getSlot(slot);
+        if (!info) {
           button.hidden = true;
           return;
         }
-        const skill = SHOP_SKILLS.find(s => s.id === id)!;
-        const active = isSkillVisuallyActive(id);
-        const charges = skillState.charges[id];
         button.hidden = false;
-        button.textContent = `${slot + 1}\n${skill.label.toUpperCase()}`;
-        button.style.setProperty('--skill-color', skill.color);
-        button.dataset.empty = String(!active && charges <= 0);
+        button.textContent = `${slot + 1}\n${info.label.toUpperCase()}`;
+        button.style.setProperty('--skill-color', info.color);
+        button.dataset.empty = String(info.empty);
       });
     },
     detach(): void {

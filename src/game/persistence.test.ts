@@ -66,6 +66,7 @@ describe('migrateData', () => {
       unlockedSkills: ['dash'],
       equippedOrder: ['dash'],
       activeSkills: { dash: true } as GameData['activeSkills'],
+      displayName: 'Ami',
     };
 
     const d = migrateData({ ...current });
@@ -73,5 +74,11 @@ describe('migrateData', () => {
     expect(d.equippedOrder).toEqual(['dash']);
     expect(d.unlockedSkills).toEqual(['dash']);
     expect(d.activeSkills.dash).toBe(true);
+    expect(d.displayName).toBe('Ami');
+  });
+
+  it('defaults displayName to an empty string when missing (not yet chosen)', () => {
+    const d = migrateData({});
+    expect(d.displayName).toBe('');
   });
 });
