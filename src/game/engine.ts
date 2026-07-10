@@ -1,4 +1,6 @@
+import { H, W } from './constants';
 import { attachInput } from './input';
+import { attachSkillButtons } from './mobileControls';
 import { drawBird } from './render/bird';
 import { drawBg } from './render/background';
 import { drawHUD } from './render/hud';
@@ -10,10 +12,16 @@ import { drawClone } from './skills/skills';
 import { init, world } from './state';
 import { update } from './update';
 
-export function createGame(canvas: HTMLCanvasElement) {
+export function createGame(canvas: HTMLCanvasElement, controlsContainer?: HTMLElement | null) {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
   const ctx = canvas.getContext('2d')!;
+  ctx.scale(dpr, dpr);
+
   let rafId: number | null = null;
   let detachInput: (() => void) | null = null;
+  let skillButtons: ReturnType<typeof attachSkillButtons> | null = null;
 
   function loop() {
     world.tick++;
@@ -37,6 +45,7 @@ export function createGame(canvas: HTMLCanvasElement) {
     if (world.shopState === 'shop') drawShop(ctx);
     drawScanlines(ctx);
     update();
+    skillButtons?.sync();
 
     rafId = requestAnimationFrame(loop);
   }
@@ -45,6 +54,7 @@ export function createGame(canvas: HTMLCanvasElement) {
     start(): void {
       init();
       detachInput = attachInput(canvas);
+      if (controlsContainer) skillButtons = attachSkillButtons(controlsContainer);
       rafId = requestAnimationFrame(loop);
     },
     stop(): void {
@@ -52,6 +62,8 @@ export function createGame(canvas: HTMLCanvasElement) {
       rafId = null;
       detachInput?.();
       detachInput = null;
+      skillButtons?.detach();
+      skillButtons = null;
     },
   };
 }

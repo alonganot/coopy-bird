@@ -23,34 +23,58 @@ export function handleCanvasClick(mx: number, my: number): void {
   jump();
 }
 
+/** Shared by the keyboard slot handler and the on-screen mobile skill buttons. */
+export function pressSkillSlot(slot: number): void {
+  const id = world.gameData.equippedOrder[slot] as SkillId | undefined;
+  if (!id) return;
+  if (id === 'hover') startHover(); else activateSkill(id);
+}
+
+/** Shared by the keyboard slot handler and the on-screen mobile skill buttons. */
+export function releaseSkillSlot(slot: number): void {
+  const id = world.gameData.equippedOrder[slot] as SkillId | undefined;
+  if (id === 'hover') stopHover();
+}
+
 export function attachInput(canvas: HTMLCanvasElement): () => void {
   const onKeyDown = (e: KeyboardEvent) => {
     if (world.shopState) return;
     if (e.code === 'Space') jump();
     const slot = SKILL_SLOT_KEYS[e.code];
     if (slot === undefined) return;
-    const id = world.gameData.equippedOrder[slot] as SkillId | undefined;
-    if (!id) return;
-    if (id === 'hover') startHover(); else activateSkill(id);
+    pressSkillSlot(slot);
   };
 
   const onKeyUp = (e: KeyboardEvent) => {
     const slot = SKILL_SLOT_KEYS[e.code];
     if (slot === undefined) return;
-    const id = world.gameData.equippedOrder[slot] as SkillId | undefined;
-    if (id === 'hover') stopHover();
+    releaseSkillSlot(slot);
   };
 
+  // Maps a client (CSS-pixel) coordinate to the game's logical W×H coordinate
+  // space (the same space all drawing/hit-testing uses) — necessary because the
+  // canvas is CSS-scaled to fit the viewport, so its displayed CSS size rarely
+  // matches the logical W×H 1:1. Deliberately scales against W/H, not
+  // canvas.width/height, since the backing store may additionally be
+  // devicePixelRatio-scaled (see engine.ts) and drawing is done through a
+  // ctx.scale(dpr, dpr) context that already undoes that for us.
+  function toCanvasCoords(clientX: number, clientY: number): [number, number] {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    return [(clientX - rect.left) * scaleX, (clientY - rect.top) * scaleY];
+  }
+
   const onClick = (e: MouseEvent) => {
-    const r = canvas.getBoundingClientRect();
-    handleCanvasClick(e.clientX - r.left, e.clientY - r.top);
+    const [mx, my] = toCanvasCoords(e.clientX, e.clientY);
+    handleCanvasClick(mx, my);
   };
 
   const onTouchStart = (e: TouchEvent) => {
     e.preventDefault();
-    const r = canvas.getBoundingClientRect();
     const t = e.touches[0];
-    handleCanvasClick(t.clientX - r.left, t.clientY - r.top);
+    const [mx, my] = toCanvasCoords(t.clientX, t.clientY);
+    handleCanvasClick(mx, my);
   };
 
   document.addEventListener('keydown', onKeyDown);

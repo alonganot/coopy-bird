@@ -6,7 +6,7 @@ import { skillState } from './state';
 interface ItemRect { skill: SkillItem; x: number; y: number; w: number; h: number }
 
 function getSkillItemRects(px: number, py: number, pw: number): ItemRect[] {
-  const itemW = pw - 32, itemH = 34, gapY = 4;
+  const itemW = pw - 32, itemH = 37, gapY = 1;
   const gridX = px + 16;
   const gridY = py + 112;
   return SHOP_SKILLS.map((skill, i) => ({
