@@ -1,6 +1,6 @@
-# Flappy Bird
+# Coopy Bird
 
-A neon-styled Flappy Bird clone with a persistent coin economy, a cosmetics shop, nine unlockable skills, and a real-time multiplayer mode — built with [Claude Code](https://claude.com/claude-code).
+A neon-styled Arcade game with a persistent coin economy, a cosmetics shop, nine unlockable skills, and a real-time multiplayer mode — built with [Claude Code](https://claude.com/claude-code).
 
 ![stack](https://img.shields.io/badge/TypeScript-strict-3178c6) ![stack](https://img.shields.io/badge/Vite-5-646cff) ![stack](https://img.shields.io/badge/React-18-61dafb) ![stack](https://img.shields.io/badge/WebSocket-ws-000000)
 
@@ -21,11 +21,11 @@ npm run server
 
 Then open the printed URL and hit "MULTIPLAYER" from the main screen. `npm run dev` runs with `--host`, and the client auto-detects the server's address, so anyone on the same network can join by opening your machine's printed network URL — no config needed.
 
-Space (or tap) to flap. Score points to earn coins, then spend them in the in-game shop. Works on mobile too — the canvas scales to any screen, and on-screen skill buttons appear automatically on touch devices.
+Space (or tap) to jump. Score points to earn coins, then spend them in the in-game shop. Works on mobile too — the canvas scales to any screen, and on-screen skill buttons appear automatically on touch devices.
 
 ## Features
 
-- Classic flap-and-dodge gameplay with a coin economy and a top-5 local high-score board
+- Classic jump-and-dodge gameplay with a coin economy and a top-5 local high-score board
 - **Shop** with four tabs, each with its own unlock/equip flow:
   - **Colors** — 8 bird skins
   - **Pipes** — 6 pipe designs, from a plain neon tube up to a crystal-spike prism column

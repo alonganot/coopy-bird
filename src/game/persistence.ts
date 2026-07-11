@@ -18,11 +18,17 @@ export interface GameData {
   displayName: string;
 }
 
-const STORAGE_KEY = 'flappyData';
+const STORAGE_KEY = 'coopyBirdData';
+/** Pre-rename key (the game had once "Flappy") — read once to migrate existing saves. */
+const LEGACY_STORAGE_KEY = 'flappyData';
 
 export function loadData(): Partial<GameData> {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') || {};
+    const current = localStorage.getItem(STORAGE_KEY);
+    if (current) return JSON.parse(current) || {};
+    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (legacy) return JSON.parse(legacy) || {};
+    return {};
   } catch {
     return {};
   }
