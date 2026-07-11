@@ -23,6 +23,7 @@ function toSnapshotPlayer(p: ServerPlayer, now: number): SnapshotPlayer {
     id: p.id,
     name: p.name,
     color: p.color,
+    props: p.props,
     y: p.y,
     vy: p.vy,
     alive: p.alive,
@@ -75,7 +76,8 @@ wss.on('connection', ws => {
     }
 
     if (msg.type === 'join') {
-      const player = createPlayer(id, ws, msg.name || 'Player', msg.color, msg.equippedOrder ?? []);
+      const props = msg.props ?? { hat: '', glasses: '', mask: '', shoe: '' };
+      const player = createPlayer(id, ws, msg.name || 'Player', msg.color, props, msg.equippedOrder ?? []);
       room.players.set(id, player);
       socketToPlayerId.set(ws, id);
       send(ws, { type: 'joined', id });

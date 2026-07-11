@@ -1,3 +1,6 @@
+import type { GlassesItem, HatItem, MaskItem, ShoeItem } from '../shop/types';
+import { drawGlasses, drawHat, drawMask, drawShoes } from './props';
+
 export interface BirdColor {
   body: string;
   wing: string;
@@ -10,6 +13,13 @@ export interface BirdEffects {
   dash: { progress: number } | null;
 }
 
+export interface BirdProps {
+  hat: HatItem | null;
+  glasses: GlassesItem | null;
+  mask: MaskItem | null;
+  shoe: ShoeItem | null;
+}
+
 export interface BirdRenderParams {
   x: number;
   y: number;
@@ -19,6 +29,7 @@ export interface BirdRenderParams {
   color: BirdColor;
   idleBob: number;
   effects: BirdEffects;
+  props?: BirdProps;
 }
 
 export function drawBird(ctx: CanvasRenderingContext2D, p: BirdRenderParams): void {
@@ -87,6 +98,9 @@ export function drawBird(ctx: CanvasRenderingContext2D, p: BirdRenderParams): vo
   ctx.fill();
   ctx.restore();
 
+  if (p.props?.shoe) drawShoes(ctx, p.props.shoe, p.r);
+  if (p.props?.mask) drawMask(ctx, p.props.mask, p.r);
+
   ctx.fillStyle = col.wing;
   ctx.beginPath();
   ctx.ellipse(-4, 5, 10, 6, -0.3, 0, Math.PI * 2);
@@ -122,6 +136,8 @@ export function drawBird(ctx: CanvasRenderingContext2D, p: BirdRenderParams): vo
   ctx.arc(7, -7, 1.5, 0, Math.PI * 2);
   ctx.fill();
 
+  if (p.props?.glasses) drawGlasses(ctx, p.props.glasses, p.r);
+
   ctx.fillStyle = '#ff8c42';
   ctx.beginPath();
   ctx.moveTo(14, -3);
@@ -136,6 +152,8 @@ export function drawBird(ctx: CanvasRenderingContext2D, p: BirdRenderParams): vo
   ctx.lineTo(14, 0);
   ctx.closePath();
   ctx.fill();
+
+  if (p.props?.hat) drawHat(ctx, p.props.hat, p.r);
 
   ctx.restore();
 }

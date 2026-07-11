@@ -66,7 +66,66 @@ export interface ShopTabDef {
   label: string;
 }
 
-/** Common shape shared by colors/pipes/backgrounds for the generic purchase/equip helper. */
+export type PropsSubTabId = 'colors' | 'hats' | 'glasses' | 'masks' | 'shoes';
+
+export interface PropsSubTabDef {
+  id: PropsSubTabId;
+  label: string;
+}
+
+export type HatStyle =
+  | 'cap' | 'top-hat' | 'beanie' | 'crown' | 'headband' | 'party' | 'helmet' | 'halo';
+
+export interface HatItem {
+  id: string;
+  label: string;
+  price: number;
+  free?: boolean;
+  style: HatStyle;
+  primary: string;
+  accent: string;
+}
+
+export type GlassesStyle =
+  | 'round' | 'square' | 'aviator' | 'star' | 'heart' | 'visor' | 'monocle' | 'ski';
+
+export interface GlassesItem {
+  id: string;
+  label: string;
+  price: number;
+  free?: boolean;
+  style: GlassesStyle;
+  frame: string;
+  lens: string;
+}
+
+export type MaskStyle =
+  | 'bandit' | 'ninja' | 'hero' | 'robot' | 'skull' | 'plague' | 'carnival' | 'tribal';
+
+export interface MaskItem {
+  id: string;
+  label: string;
+  price: number;
+  free?: boolean;
+  style: MaskStyle;
+  primary: string;
+  accent: string;
+}
+
+export type ShoeStyle =
+  | 'sneaker' | 'boot' | 'sandal' | 'cleats' | 'roller' | 'clown' | 'armor' | 'ballet';
+
+export interface ShoeItem {
+  id: string;
+  label: string;
+  price: number;
+  free?: boolean;
+  style: ShoeStyle;
+  primary: string;
+  sole: string;
+}
+
+/** Common shape shared by colors/pipes/backgrounds/props for the generic purchase/equip helper. */
 export interface CollectibleItem {
   id: string;
   price: number;

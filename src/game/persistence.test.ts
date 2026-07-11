@@ -12,6 +12,14 @@ describe('migrateData', () => {
     expect(d.activePipe).toBe('default');
     expect(d.unlockedBackgrounds).toEqual(['default']);
     expect(d.activeBackground).toBe('default');
+    expect(d.unlockedHats).toEqual([]);
+    expect(d.activeHat).toBe('');
+    expect(d.unlockedGlasses).toEqual([]);
+    expect(d.activeGlasses).toBe('');
+    expect(d.unlockedMasks).toEqual([]);
+    expect(d.activeMask).toBe('');
+    expect(d.unlockedShoes).toEqual([]);
+    expect(d.activeShoe).toBe('');
     expect(d.unlockedSkills).toEqual([]);
     expect(d.equippedOrder).toEqual([]);
     expect(d.activeSkills.dash).toBe(false);
@@ -63,6 +71,14 @@ describe('migrateData', () => {
       activePipe: 'default',
       unlockedBackgrounds: ['default'],
       activeBackground: 'default',
+      unlockedHats: ['cap'],
+      activeHat: 'cap',
+      unlockedGlasses: [],
+      activeGlasses: '',
+      unlockedMasks: [],
+      activeMask: '',
+      unlockedShoes: [],
+      activeShoe: '',
       unlockedSkills: ['dash'],
       equippedOrder: ['dash'],
       activeSkills: { dash: true } as GameData['activeSkills'],
@@ -75,6 +91,7 @@ describe('migrateData', () => {
     expect(d.unlockedSkills).toEqual(['dash']);
     expect(d.activeSkills.dash).toBe(true);
     expect(d.displayName).toBe('Ami');
+    expect(d.activeHat).toBe('cap');
   });
 
   it('defaults displayName to an empty string when missing (not yet chosen)', () => {

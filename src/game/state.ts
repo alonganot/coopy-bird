@@ -2,6 +2,7 @@ import { H, W } from './constants';
 import { loadData, migrateData, saveData as persistSaveData, type GameData } from './persistence';
 import { getActiveBackgroundItem } from './shop/data';
 import { initSkillState } from './skills/state';
+import type { PropsSubTabId } from './shop/types';
 import type {
   Bird,
   DecorParticle,
@@ -25,6 +26,7 @@ export interface World {
   gridOffset: number;
   shopState: 'shop' | null;
   shopTab: ShopTabId;
+  propsSubTab: PropsSubTabId;
   tick: number;
   glitchTimer: number;
   glitchActive: boolean;
@@ -47,7 +49,8 @@ export const world: World = {
   decor: [],
   gridOffset: 0,
   shopState: null,
-  shopTab: 'colors',
+  shopTab: 'props',
+  propsSubTab: 'colors',
   tick: 0,
   glitchTimer: 150,
   glitchActive: false,

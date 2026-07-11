@@ -1,4 +1,5 @@
 import { drawBird } from '../../game/render/bird';
+import { SHOP_GLASSES, SHOP_HATS, SHOP_MASKS, SHOP_SHOES } from '../../game/shop/data';
 import type { SnapshotPlayer } from '../../../server/protocol';
 import { PLAYER_X } from '../mpState';
 
@@ -45,6 +46,12 @@ export function drawRemotePlayer(ctx: CanvasRenderingContext2D, p: SnapshotPlaye
       invisible: (p.activeTimer.invisibility ?? 0) > 0,
       // Exact remaining-duration fraction isn't synced; full-intensity while active is an accepted v1 simplification.
       dash: dashActive ? { progress: 1 } : null,
+    },
+    props: {
+      hat: SHOP_HATS.find(h => h.id === p.props.hat) ?? null,
+      glasses: SHOP_GLASSES.find(g => g.id === p.props.glasses) ?? null,
+      mask: SHOP_MASKS.find(m => m.id === p.props.mask) ?? null,
+      shoe: SHOP_SHOES.find(s => s.id === p.props.shoe) ?? null,
     },
   });
 

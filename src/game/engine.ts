@@ -8,7 +8,7 @@ import { drawHUD } from './render/hud';
 import { drawOverlay, drawScanlines } from './render/overlay';
 import { drawParticles, drawProjectiles } from './render/particles';
 import { drawPipe } from './render/pipe';
-import { getActiveColorItem } from './shop/data';
+import { getActiveColorItem, getActiveGlassesItem, getActiveHatItem, getActiveMaskItem, getActiveShoeItem } from './shop/data';
 import { drawShop } from './shop/shop';
 import { SHOP_SKILLS } from './skills/data';
 import { drawClone, isSkillActive, isSkillVisuallyActive } from './skills/skills';
@@ -61,6 +61,12 @@ export function createGame(canvas: HTMLCanvasElement, controlsContainer?: HTMLEl
         dash: isSkillActive('dash')
           ? { progress: skillState.activeTimer.dash / SHOP_SKILLS.find(s => s.id === 'dash')!.duration }
           : null,
+      },
+      props: {
+        hat: getActiveHatItem(world.gameData),
+        glasses: getActiveGlassesItem(world.gameData),
+        mask: getActiveMaskItem(world.gameData),
+        shoe: getActiveShoeItem(world.gameData),
       },
     });
     if (bird.thrustAnim > 0) bird.thrustAnim = Math.max(0, bird.thrustAnim - 0.08);

@@ -9,10 +9,19 @@ export interface PlayerColor {
   glow: string;
 }
 
+/** Wearable prop ids only (not styling data) — the client resolves ids to full items via SHOP_HATS/etc. */
+export interface PlayerProps {
+  hat: string;
+  glasses: string;
+  mask: string;
+  shoe: string;
+}
+
 export interface SnapshotPlayer {
   id: string;
   name: string;
   color: PlayerColor;
+  props: PlayerProps;
   y: number;
   vy: number;
   alive: boolean;
@@ -32,7 +41,7 @@ export interface LeaderboardEntry {
 
 // --- Client -> Server ---
 export type ClientMessage =
-  | { type: 'join'; name: string; color: PlayerColor; equippedOrder: SkillId[] }
+  | { type: 'join'; name: string; color: PlayerColor; props: PlayerProps; equippedOrder: SkillId[] }
   | { type: 'rename'; name: string }
   | { type: 'ready'; ready: boolean }
   | { type: 'jump' }
