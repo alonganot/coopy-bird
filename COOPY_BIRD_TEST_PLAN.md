@@ -1,9 +1,9 @@
-# Flappy Bird Manual Test Plan
+# Coopy Bird Manual Test Plan
 
 ## Overview
-This test plan covers the core functionality of the Flappy Bird browser game, including gameplay mechanics, state transitions, shop features, persistence, and edge cases. Each test is designed to be executed manually by a human tester without requiring code knowledge.
+This test plan covers the core functionality of the Coopy Bird browser game, including gameplay mechanics, state transitions, shop features, persistence, and edge cases. Each test is designed to be executed manually by a human tester without requiring code knowledge.
 
-**Game Setup**: Open `flappy_bird.html` directly in a web browser (Chrome, Firefox, Edge, Safari). No build step or dependencies required.
+**Game Setup**: Open `coopy_bird.html` directly in a web browser (Chrome, Firefox, Edge, Safari). No build step or dependencies required.
 
 **Canvas Dimensions**: 400px × 600px  
 **Key UI Elements**: Score display (center-top), coin counter (top-right), shop button (idle state, center-bottom), dash indicator (top-left during play)
@@ -19,9 +19,9 @@ This test plan covers the core functionality of the Flappy Bird browser game, in
 - DevTools Console access (for verification steps)
 
 ### Pre-Test Checklist
-1. Open `flappy_bird.html` in a fresh browser tab
+1. Open `coopy_bird.html` in a fresh browser tab
 2. Verify the game canvas appears centered with a dark background and starfield
-3. Confirm the title screen displays "FLAPPY BIRD" with instructions
+3. Confirm the title screen displays "COOPY BIRD" with instructions
 4. Open DevTools (F12 or Right-click → Inspect → Console tab)
 
 ### Cleanup Between Tests
@@ -36,7 +36,7 @@ This test plan covers the core functionality of the Flappy Bird browser game, in
 ### TC-001: Game Starts in Idle State with Correct UI
 **Preconditions**: Fresh page load, no prior localStorage data  
 **Test Steps**:
-1. Load `flappy_bird.html` in the browser
+1. Load `coopy_bird.html` in the browser
 2. Observe the canvas for 2 seconds without any input
 3. Look at the center of the screen
 4. Check the bottom-center area for a button
@@ -44,7 +44,7 @@ This test plan covers the core functionality of the Flappy Bird browser game, in
 **Expected Result**:
 - Starfield background animates (stars twinkle)
 - Yellow bird centered on the canvas
-- "FLAPPY BIRD" title displayed in cyan
+- "COOPY BIRD" title displayed in cyan
 - Instruction text: "// PRESS SPACE OR TAP //" 
 - Smaller text: "[ B ] DASH — BREAK PIPES — EVERY 5 PTS"
 - "BEST: 0    COINS: 0" displayed at bottom
@@ -1117,7 +1117,7 @@ This test plan covers the core functionality of the Flappy Bird browser game, in
 ### TC-056: Game Runs on Chrome
 **Preconditions**: Chrome browser (latest stable)  
 **Test Steps**:
-1. Open `flappy_bird.html` in Chrome
+1. Open `coopy_bird.html` in Chrome
 2. Load the game and run through TC-001 (idle state checks)
 3. Play the game for at least 10 seconds
 4. Open the shop
@@ -1137,7 +1137,7 @@ This test plan covers the core functionality of the Flappy Bird browser game, in
 ### TC-057: Game Runs on Firefox
 **Preconditions**: Firefox browser (latest stable)  
 **Test Steps**:
-1. Open `flappy_bird.html` in Firefox
+1. Open `coopy_bird.html` in Firefox
 2. Perform the same tests as TC-056
 
 **Expected Result**:
@@ -1153,7 +1153,7 @@ This test plan covers the core functionality of the Flappy Bird browser game, in
 ### TC-058: Game Runs on Safari
 **Preconditions**: Safari browser (macOS or iOS)  
 **Test Steps**:
-1. Open `flappy_bird.html` in Safari
+1. Open `coopy_bird.html` in Safari
 2. Perform the same tests as TC-056
 3. If on iOS, test touch input as well
 
@@ -1170,7 +1170,7 @@ This test plan covers the core functionality of the Flappy Bird browser game, in
 ### TC-059: Game Runs on Edge
 **Preconditions**: Microsoft Edge browser (latest)  
 **Test Steps**:
-1. Open `flappy_bird.html` in Edge
+1. Open `coopy_bird.html` in Edge
 2. Perform the same tests as TC-056
 
 **Expected Result**:
@@ -1261,7 +1261,7 @@ Environment: [Browser, OS, Screen size]
 
 ## Final Notes
 
-This test plan provides comprehensive coverage of the Flappy Bird game's core features, state machine, shop, and persistence mechanisms. Each test case is self-contained and can be executed independently. 
+This test plan provides comprehensive coverage of the Coopy Bird game's core features, state machine, shop, and persistence mechanisms. Each test case is self-contained and can be executed independently. 
 
 **Key Success Criteria**:
 - All 59 test cases pass

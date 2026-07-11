@@ -13,15 +13,15 @@ export function drawOverlay(ctx: CanvasRenderingContext2D): void {
     if (world.glitchActive) {
       ctx.globalAlpha = 0.5;
       ctx.fillStyle = '#ff00cc';
-      ctx.fillText('FLAPPY BIRD', W / 2 - 3, H / 2 - 58);
+      ctx.fillText('COOPY BIRD', W / 2 - 3, H / 2 - 58);
       ctx.fillStyle = '#00ffff';
-      ctx.fillText('FLAPPY BIRD', W / 2 + 3, H / 2 - 58);
+      ctx.fillText('COOPY BIRD', W / 2 + 3, H / 2 - 58);
       ctx.globalAlpha = 1;
     }
     ctx.shadowBlur = 20;
     ctx.shadowColor = '#00f7ff';
     ctx.fillStyle = '#00f7ff';
-    ctx.fillText('FLAPPY BIRD', W / 2, H / 2 - 58);
+    ctx.fillText('COOPY BIRD', W / 2, H / 2 - 58);
     ctx.restore();
     ctx.save();
     ctx.textAlign = 'center';
