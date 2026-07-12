@@ -16,7 +16,7 @@ npm run dev
 
 Open the printed URL, pick a username (no password — it just remembers your save), and play. Then hit "MULTIPLAYER" from the main screen to try real-time multiplayer. `npm run dev` runs with `--host`, and the client auto-detects the server's address, so anyone on the same network can join by opening your machine's printed network URL — no config needed.
 
-Prefer running the server without Docker? `npm run server` still works — just point `DATABASE_URL` at any reachable Postgres instance first (see `server/.env.example`).
+Prefer running the server without Docker? Copy `server/.env.example` to `server/.env`, point `DATABASE_URL` at any reachable Postgres instance, and run `npm run server:dev` (loads `server/.env` automatically). Plain `npm run server` doesn't load any `.env` file — that's intentional, since it's also what Docker/Fly production uses, where env vars come from the container/host directly.
 
 Space (or tap) to jump. Score points to earn coins, then spend them in the in-game shop. Works on mobile too — the canvas scales to any screen, and on-screen skill buttons appear automatically on touch devices.
 
