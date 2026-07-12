@@ -4,7 +4,7 @@ import { attachModeSwitch } from '../game/modeSwitchButton';
 import { drawBg } from '../game/render/background';
 import { drawScanlines } from '../game/render/overlay';
 import { drawPipe } from '../game/render/pipe';
-import { getActiveColorItem } from '../game/shop/data';
+import { getActiveColorItem, getActiveGlassesItem, getActiveHatItem, getActiveMaskItem, getActiveShoeItem } from '../game/shop/data';
 import { saveData, world } from '../game/state';
 import { connect, type Connection } from './connection';
 import { attachNameInput } from './nameInput';
@@ -63,6 +63,12 @@ export function createMultiplayerGame(
       type: 'join',
       name: gameData.displayName,
       color: { body: col.body, wing: col.wing, glow: col.glow },
+      props: {
+        hat: getActiveHatItem(gameData)?.id ?? '',
+        glasses: getActiveGlassesItem(gameData)?.id ?? '',
+        mask: getActiveMaskItem(gameData)?.id ?? '',
+        shoe: getActiveShoeItem(gameData)?.id ?? '',
+      },
       equippedOrder: gameData.equippedOrder,
     });
   }

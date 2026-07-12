@@ -10,6 +10,15 @@ export interface GameData {
   activePipe: string;
   unlockedBackgrounds: string[];
   activeBackground: string;
+  unlockedHats: string[];
+  /** Empty string means "no hat equipped" — unlike colors/pipes/backgrounds, bare is a valid default. */
+  activeHat: string;
+  unlockedGlasses: string[];
+  activeGlasses: string;
+  unlockedMasks: string[];
+  activeMask: string;
+  unlockedShoes: string[];
+  activeShoe: string;
   unlockedSkills: SkillId[];
   /** Always fully populated (one entry per SHOP_SKILLS) by migrateSkillData before use. */
   activeSkills: Record<SkillId, boolean>;
@@ -43,6 +52,14 @@ export function migrateData(d: Partial<GameData>): GameData {
   if (!d.activePipe) d.activePipe = 'default';
   if (!d.unlockedBackgrounds) d.unlockedBackgrounds = ['default'];
   if (!d.activeBackground) d.activeBackground = 'default';
+  if (!d.unlockedHats) d.unlockedHats = [];
+  if (d.activeHat === undefined) d.activeHat = '';
+  if (!d.unlockedGlasses) d.unlockedGlasses = [];
+  if (d.activeGlasses === undefined) d.activeGlasses = '';
+  if (!d.unlockedMasks) d.unlockedMasks = [];
+  if (d.activeMask === undefined) d.activeMask = '';
+  if (!d.unlockedShoes) d.unlockedShoes = [];
+  if (d.activeShoe === undefined) d.activeShoe = '';
   if (d.displayName === undefined) d.displayName = '';
   return migrateSkillData(d as GameData);
 }

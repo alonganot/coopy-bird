@@ -2,13 +2,14 @@ import type { WebSocket } from 'ws';
 import type { SkillId } from '../src/game/skills/data';
 import { SHOP_SKILLS } from '../src/game/skills/data';
 import type { Pipe } from '../src/game/types';
-import type { PlayerColor, RoomPhase } from './protocol';
+import type { PlayerColor, PlayerProps, RoomPhase } from './protocol';
 
 export interface ServerPlayer {
   id: string;
   ws: WebSocket;
   name: string;
   color: PlayerColor;
+  props: PlayerProps;
   ready: boolean;
   y: number;
   vy: number;
@@ -73,6 +74,7 @@ export function createPlayer(
   ws: WebSocket,
   name: string,
   color: PlayerColor,
+  props: PlayerProps,
   equippedOrder: SkillId[],
 ): ServerPlayer {
   return {
@@ -80,6 +82,7 @@ export function createPlayer(
     ws,
     name,
     color,
+    props,
     ready: false,
     y: START_Y,
     vy: 0,

@@ -1,5 +1,15 @@
 import type { GameData } from '../persistence';
-import type { BackgroundItem, ColorItem, PipeItem, ShopTabDef } from './types';
+import type {
+  BackgroundItem,
+  ColorItem,
+  GlassesItem,
+  HatItem,
+  MaskItem,
+  PipeItem,
+  PropsSubTabDef,
+  ShoeItem,
+  ShopTabDef,
+} from './types';
 
 export const SHOP_COLORS: ColorItem[] = [
   { id: 'yellow', label: 'Classic', price: 0, body: '#f9ca24', wing: '#f0932b', glow: '#f9ca2488', free: true },
@@ -87,10 +97,62 @@ export const SHOP_BACKGROUNDS: BackgroundItem[] = [
 ];
 
 export const SHOP_TABS: ShopTabDef[] = [
-  { id: 'colors', label: 'COLORS' },
+  { id: 'props', label: 'PROPS' },
   { id: 'skills', label: 'SKILLS' },
   { id: 'pipes', label: 'PIPES' },
   { id: 'bg', label: 'SCENE' },
+];
+
+export const PROPS_SUB_TABS: PropsSubTabDef[] = [
+  { id: 'colors', label: 'COLORS' },
+  { id: 'hats', label: 'HATS' },
+  { id: 'glasses', label: 'GLASSES' },
+  { id: 'masks', label: 'MASKS' },
+  { id: 'shoes', label: 'SHOES' },
+];
+
+export const SHOP_HATS: HatItem[] = [
+  { id: 'cap', label: 'Backwards Cap', price: 100, style: 'cap', primary: '#ff4757', accent: '#ffffff' },
+  { id: 'headband', label: 'Sport Headband', price: 250, style: 'headband', primary: '#2ed573', accent: '#ffffff' },
+  { id: 'beanie', label: 'Cozy Beanie', price: 450, style: 'beanie', primary: '#5352ed', accent: '#dfe4ea' },
+  { id: 'party', label: 'Party Hat', price: 700, style: 'party', primary: '#ff6b81', accent: '#ffd32a' },
+  { id: 'top-hat', label: 'Top Hat', price: 950, style: 'top-hat', primary: '#1e1e2e', accent: '#eccc68' },
+  { id: 'helmet', label: 'Space Helmet', price: 1250, style: 'helmet', primary: '#a4b0be', accent: '#00d2ff' },
+  { id: 'crown', label: 'Royal Crown', price: 1600, style: 'crown', primary: '#eccc68', accent: '#ff6b81' },
+  { id: 'halo', label: 'Halo', price: 2000, style: 'halo', primary: '#fffa65', accent: '#ffffff' },
+];
+
+export const SHOP_GLASSES: GlassesItem[] = [
+  { id: 'round', label: 'Round Specs', price: 100, style: 'round', frame: '#2f3542', lens: '#70a1ff88' },
+  { id: 'square', label: 'Square Frames', price: 250, style: 'square', frame: '#57606f', lens: '#a4b0be88' },
+  { id: 'visor', label: 'Sport Visor', price: 450, style: 'visor', frame: '#2f3542', lens: '#ff6b6b99' },
+  { id: 'monocle', label: 'Monocle', price: 700, style: 'monocle', frame: '#eccc68', lens: '#ffffff55' },
+  { id: 'aviator', label: 'Aviators', price: 950, style: 'aviator', frame: '#eccc68', lens: '#2f354299' },
+  { id: 'ski', label: 'Ski Goggles', price: 1250, style: 'ski', frame: '#ff4757', lens: '#7bed9f99' },
+  { id: 'star', label: 'Star Shades', price: 1600, style: 'star', frame: '#ff6b81', lens: '#ffd32a99' },
+  { id: 'heart', label: 'Heart Shades', price: 2000, style: 'heart', frame: '#ff4757', lens: '#ff6b8199' },
+];
+
+export const SHOP_MASKS: MaskItem[] = [
+  { id: 'bandit', label: 'Bandit Mask', price: 100, style: 'bandit', primary: '#2f3542', accent: '#ffffff' },
+  { id: 'carnival', label: 'Carnival Mask', price: 250, style: 'carnival', primary: '#eccc68', accent: '#ff6b81' },
+  { id: 'ninja', label: 'Ninja Wrap', price: 450, style: 'ninja', primary: '#1e1e2e', accent: '#ff4757' },
+  { id: 'tribal', label: 'Tribal Paint', price: 700, style: 'tribal', primary: '#2ed573', accent: '#fffa65' },
+  { id: 'hero', label: 'Hero Mask', price: 950, style: 'hero', primary: '#1e90ff', accent: '#ffd32a' },
+  { id: 'plague', label: 'Plague Doctor', price: 1250, style: 'plague', primary: '#2f3542', accent: '#dfe4ea' },
+  { id: 'robot', label: 'Robot Visor', price: 1600, style: 'robot', primary: '#57606f', accent: '#00d2ff' },
+  { id: 'skull', label: 'Skull Mask', price: 2000, style: 'skull', primary: '#dfe4ea', accent: '#1e1e2e' },
+];
+
+export const SHOP_SHOES: ShoeItem[] = [
+  { id: 'sneaker', label: 'Sneakers', price: 100, style: 'sneaker', primary: '#ffffff', sole: '#ff4757' },
+  { id: 'sandal', label: 'Sandals', price: 250, style: 'sandal', primary: '#a0522d', sole: '#deb887' },
+  { id: 'boot', label: 'Work Boots', price: 450, style: 'boot', primary: '#8b5a2b', sole: '#2f3542' },
+  { id: 'ballet', label: 'Ballet Flats', price: 700, style: 'ballet', primary: '#ff6b81', sole: '#ffb8c6' },
+  { id: 'roller', label: 'Roller Skates', price: 950, style: 'roller', primary: '#ff4757', sole: '#eccc68' },
+  { id: 'cleats', label: 'Cleats', price: 1250, style: 'cleats', primary: '#2ed573', sole: '#1e1e2e' },
+  { id: 'clown', label: 'Clown Shoes', price: 1600, style: 'clown', primary: '#ff6b81', sole: '#fffa65' },
+  { id: 'armor', label: 'Armored Boots', price: 2000, style: 'armor', primary: '#a4b0be', sole: '#eccc68' },
 ];
 
 export function getActiveColorItem(gameData: GameData): ColorItem {
@@ -101,4 +163,16 @@ export function getActivePipeItem(gameData: GameData): PipeItem {
 }
 export function getActiveBackgroundItem(gameData: GameData): BackgroundItem {
   return SHOP_BACKGROUNDS.find(b => b.id === gameData.activeBackground) ?? SHOP_BACKGROUNDS[0];
+}
+export function getActiveHatItem(gameData: GameData): HatItem | null {
+  return SHOP_HATS.find(h => h.id === gameData.activeHat) ?? null;
+}
+export function getActiveGlassesItem(gameData: GameData): GlassesItem | null {
+  return SHOP_GLASSES.find(g => g.id === gameData.activeGlasses) ?? null;
+}
+export function getActiveMaskItem(gameData: GameData): MaskItem | null {
+  return SHOP_MASKS.find(m => m.id === gameData.activeMask) ?? null;
+}
+export function getActiveShoeItem(gameData: GameData): ShoeItem | null {
+  return SHOP_SHOES.find(s => s.id === gameData.activeShoe) ?? null;
 }

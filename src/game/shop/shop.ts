@@ -6,21 +6,21 @@ import { world } from '../state';
 import type { ShopTabId } from '../types';
 import { H, W } from '../constants';
 import { drawBackgroundsTab, handleBackgroundsShopClick } from './backgroundsTab';
-import { drawColorsTab, handleColorsShopClick } from './colorsTab';
 import { SHOP_TABS } from './data';
 import { drawPipesTab, handlePipesShopClick } from './pipesTab';
+import { drawPropsTab, handlePropsShopClick } from './propsTab';
 
 const SHOP_TAB_LAYOUT = { tabW: 80, tabH: 24, gap: 4 };
 
 const TAB_DRAWERS: Record<ShopTabId, (ctx: CanvasRenderingContext2D, px: number, py: number, pw: number) => void> = {
-  colors: drawColorsTab,
+  props: drawPropsTab,
   skills: drawSkillsTab,
   pipes: drawPipesTab,
   bg: drawBackgroundsTab,
 };
 
 const TAB_HANDLERS: Record<ShopTabId, (mx: number, my: number, px: number, py: number, pw: number) => void> = {
-  colors: handleColorsShopClick,
+  props: handlePropsShopClick,
   skills: handleSkillsShopClick,
   pipes: handlePipesShopClick,
   bg: handleBackgroundsShopClick,

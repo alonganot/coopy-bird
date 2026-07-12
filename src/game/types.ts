@@ -1,5 +1,5 @@
 export type GameState = 'idle' | 'play' | 'dead';
-export type ShopTabId = 'colors' | 'skills' | 'pipes' | 'bg';
+export type ShopTabId = 'props' | 'skills' | 'pipes' | 'bg';
 
 export interface Bird {
   x: number;
