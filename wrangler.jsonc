@@ -3,6 +3,7 @@
   // so Cloudflare's Wrangler deploy skips the Vite-auto-config detection path (which
   // otherwise demands Vite 6+ to auto-inject a Worker config this project doesn't need).
   "name": "coopy-bird",
+  "pages_build_output_dir": "./dist",
   "compatibility_date": "2026-01-01",
   "assets": {
     "directory": "dist"
