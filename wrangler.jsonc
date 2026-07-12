@@ -1,11 +1,8 @@
 {
-  // Static-asset-only deploy for the Vite client build — no Worker code (`main`) here,
-  // so Cloudflare's Wrangler deploy skips the Vite-auto-config detection path (which
-  // otherwise demands Vite 6+ to auto-inject a Worker config this project doesn't need).
+  // This project deploys via `wrangler pages deploy` (Cloudflare Pages), which uses
+  // `pages_build_output_dir` — the Workers-style `assets.directory` field isn't valid
+  // here and fails config validation, hence no `assets` block below.
   "name": "coopy-bird",
   "pages_build_output_dir": "./dist",
-  "compatibility_date": "2026-01-01",
-  "assets": {
-    "directory": "dist"
-  }
+  "compatibility_date": "2026-01-01"
 }
