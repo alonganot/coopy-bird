@@ -1,8 +1,14 @@
 {
-  // This project deploys via `wrangler pages deploy` (Cloudflare Pages), which uses
-  // `pages_build_output_dir` — the Workers-style `assets.directory` field isn't valid
-  // here and fails config validation, hence no `assets` block below.
+  // This Cloudflare project is a Worker (with static assets), not a classic Pages
+  // project — confirmed by Cloudflare's own build log ("Worker Name: coopy-bird").
+  // `pages_build_output_dir` makes Cloudflare's build pipeline run `wrangler pages
+  // deploy` instead, which looks for a Pages project of this name and fails since
+  // none exists. No `main` field (no Worker script) — this is a static-assets-only
+  // Worker, so `wrangler deploy` just uploads `dist/` without needing the
+  // Vite-auto-config path (which otherwise demands Vite 6+).
   "name": "coopy-bird",
-  "pages_build_output_dir": "./dist",
-  "compatibility_date": "2026-01-01"
+  "compatibility_date": "2026-01-01",
+  "assets": {
+    "directory": "dist"
+  }
 }
