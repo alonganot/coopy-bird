@@ -109,3 +109,72 @@ canvas {
   display: none;
 }
 
+.username-gate {
+  width: min(100vw, calc(100dvh * 400 / 600));
+  aspect-ratio: 400 / 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cde;
+  text-align: center;
+  box-shadow: 0 0 40px #00f7ff55, 0 0 80px #00f7ff22;
+  border: 1px solid #00f7ff33;
+}
+
+.username-gate form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+}
+
+.username-gate-title {
+  color: #00f7ff;
+  font-weight: bold;
+  font-size: 16px;
+  text-shadow: 0 0 8px #00f7ff;
+}
+
+.username-gate input {
+  width: 220px;
+  padding: 10px 12px;
+  background: rgba(1, 8, 24, 0.9);
+  border: 1.5px solid #00f7ff99;
+  border-radius: 8px;
+  color: #cde;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+}
+
+.username-gate button {
+  padding: 10px 20px;
+  background: rgba(1, 8, 24, 0.85);
+  border: 1.5px solid #f9ca24;
+  border-radius: 8px;
+  color: #f9ca24;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 13px;
+  text-shadow: 0 0 6px #f9ca24;
+  cursor: pointer;
+}
+
+.username-gate button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.username-gate-error {
+  color: #ff4466;
+  font-size: 12px;
+}
+
+.username-gate-hint {
+  color: #5a7a8a;
+  font-size: 11px;
+  max-width: 240px;
+}
+

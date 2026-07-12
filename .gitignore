@@ -2,6 +2,9 @@ node_modules/
 dist/
 dist-ssr/
 *.local
+.env
+.env.local
+# Stale local artifact from the pre-Postgres JSON-file leaderboard; unused now.
 server/data/
 
 # Local Claude Code settings (personal, not shared)

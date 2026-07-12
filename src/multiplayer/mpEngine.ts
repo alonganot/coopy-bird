@@ -55,7 +55,7 @@ export function createMultiplayerGame(
   function join(): void {
     const gameData = world.gameData;
     if (!gameData.displayName) {
-      gameData.displayName = `Player${Math.floor(Math.random() * 9000 + 1000)}`;
+      gameData.displayName = world.username || `Player${Math.floor(Math.random() * 9000 + 1000)}`;
       saveData();
     }
     const col = getActiveColorItem(gameData);

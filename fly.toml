@@ -1,0 +1,32 @@
+# Fly.io deploy config for the multiplayer server. Deploy from the repo root with:
+#   fly launch --dockerfile server/Dockerfile   (first time — pick an app name, skip Postgres/Redis prompts)
+#   fly secrets set DATABASE_URL=... ALLOWED_ORIGIN=https://your-client.pages.dev
+#   fly deploy
+#
+# app name is placeholder — `fly launch` will prompt to set/rename this.
+app = "coopy-bird-server"
+primary_region = "iad"
+
+[build]
+  dockerfile = "server/Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Kept always-on: Fly's default template auto-stops idle machines, which would
+  # reintroduce cold-start delays for the first player to connect after a lull —
+  # exactly what Fly was chosen over Render to avoid.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

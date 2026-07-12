@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
+import { createServer } from 'node:http';
 import { networkInterfaces } from 'node:os';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { JUMP } from '../src/game/constants';
+import { initSchema } from './db';
+import { handleHttp } from './http';
 import { appendLeaderboardEntries, topLeaderboard } from './leaderboard';
 import type { ClientMessage, LeaderboardEntry, ServerMessage, SnapshotPlayer } from './protocol';
 import { TICK_MS } from './protocol';
@@ -59,10 +62,18 @@ function onMatchEnd(finishedRoom: Room): void {
     score: finishedRoom.score,
     timestamp: Date.now(),
   }));
-  appendLeaderboardEntries(entries);
+  appendLeaderboardEntries(entries).catch(err => console.error('Failed to persist leaderboard entries:', err));
 }
 
-const wss = new WebSocketServer({ port: PORT, host: HOST });
+const httpServer = createServer((req, res) => {
+  handleHttp(req, res).catch(err => {
+    console.error('HTTP handler error:', err);
+    if (!res.headersSent) res.writeHead(500);
+    res.end();
+  });
+});
+
+const wss = new WebSocketServer({ server: httpServer });
 
 wss.on('connection', ws => {
   const id = randomUUID();
@@ -121,7 +132,9 @@ wss.on('connection', ws => {
         break;
       }
       case 'leaderboardRequest':
-        send(ws, { type: 'leaderboard', entries: topLeaderboard(10) });
+        topLeaderboard(10)
+          .then(entries => send(ws, { type: 'leaderboard', entries }))
+          .catch(err => console.error('Failed to load leaderboard:', err));
         break;
     }
   });
@@ -139,18 +152,33 @@ setInterval(() => {
   const now = Date.now();
   const wasEnded = room.phase === 'ended';
   stepRoom(room, now, { onMatchEnd });
-  const leaderboard = !wasEnded && room.phase === 'ended' ? topLeaderboard(10) : undefined;
-  broadcastSnapshot(leaderboard);
+  if (!wasEnded && room.phase === 'ended') {
+    topLeaderboard(10)
+      .then(entries => broadcastSnapshot(entries))
+      .catch(err => {
+        console.error('Failed to load leaderboard:', err);
+        broadcastSnapshot();
+      });
+  } else {
+    broadcastSnapshot();
+  }
 }, TICK_MS);
 
 function logListening(): void {
   console.log('Multiplayer server listening:');
-  console.log(`  Local:   ws://localhost:${PORT}`);
+  console.log(`  Local:   http://localhost:${PORT}  (ws://localhost:${PORT})`);
   Object.values(networkInterfaces()).flat().forEach(net => {
     if (net && net.family === 'IPv4' && !net.internal) {
-      console.log(`  Network: ws://${net.address}:${PORT}`);
+      console.log(`  Network: http://${net.address}:${PORT}  (ws://${net.address}:${PORT})`);
     }
   });
 }
 
-logListening();
+initSchema()
+  .then(() => {
+    httpServer.listen(PORT, HOST, logListening);
+  })
+  .catch(err => {
+    console.error('Fatal: failed to initialize database schema:', err);
+    process.exit(1);
+  });
