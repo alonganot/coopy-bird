@@ -1,5 +1,6 @@
+import { pushGameData } from './api';
 import { H, W } from './constants';
-import { loadData, migrateData, saveData as persistSaveData, type GameData } from './persistence';
+import { migrateData, type GameData } from './persistence';
 import { getActiveBackgroundItem } from './shop/data';
 import { initSkillState } from './skills/state';
 import type { PropsSubTabId } from './shop/types';
@@ -15,6 +16,8 @@ import type {
 
 export interface World {
   gameData: GameData;
+  /** Empty until the username gate (see App.tsx) resolves a session; gates saveData() until then. */
+  username: string;
   bird: Bird;
   pipes: Pipe[];
   frame: number;
@@ -38,7 +41,9 @@ function makeBird(): Bird {
 }
 
 export const world: World = {
-  gameData: migrateData(loadData()),
+  // Safe default until the username gate (App.tsx) fetches the real session from the server.
+  gameData: migrateData({}),
+  username: '',
   bird: makeBird(),
   pipes: [],
   frame: 0,
@@ -58,7 +63,8 @@ export const world: World = {
 };
 
 export function saveData(): void {
-  persistSaveData(world.gameData);
+  if (!world.username) return; // session not established yet (shouldn't happen post-gate, but stay safe)
+  pushGameData(world.username, world.gameData);
 }
 
 export function makeDecor(): void {

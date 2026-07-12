@@ -27,22 +27,7 @@ export interface GameData {
   displayName: string;
 }
 
-const STORAGE_KEY = 'coopyBirdData';
-/** Pre-rename key (the game had once "Flappy") — read once to migrate existing saves. */
-const LEGACY_STORAGE_KEY = 'flappyData';
-
-export function loadData(): Partial<GameData> {
-  try {
-    const current = localStorage.getItem(STORAGE_KEY);
-    if (current) return JSON.parse(current) || {};
-    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
-    if (legacy) return JSON.parse(legacy) || {};
-    return {};
-  } catch {
-    return {};
-  }
-}
-
+/** Fills in defaults for any missing/legacy field — applied to whatever the server returns for a username, same as it once was applied to a raw localStorage blob. */
 export function migrateData(d: Partial<GameData>): GameData {
   if (!d.totalCoins) d.totalCoins = 0;
   if (!d.highScores) d.highScores = [];
@@ -64,6 +49,24 @@ export function migrateData(d: Partial<GameData>): GameData {
   return migrateSkillData(d as GameData);
 }
 
-export function saveData(gameData: GameData): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(gameData));
+const USERNAME_STORAGE_KEY = 'coopyBirdUsername';
+
+/**
+ * The only thing left in localStorage: which username this device last logged in as.
+ * The actual save data (GameData) lives server-side in Postgres, keyed by that username.
+ */
+export function getStoredUsername(): string | null {
+  try {
+    return localStorage.getItem(USERNAME_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredUsername(username: string): void {
+  try {
+    localStorage.setItem(USERNAME_STORAGE_KEY, username);
+  } catch {
+    // localStorage unavailable (private browsing, quota) — username just won't be remembered next visit.
+  }
 }

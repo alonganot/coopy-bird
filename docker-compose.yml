@@ -1,0 +1,38 @@
+# Local integration testing only — mirrors production topology (server + Postgres)
+# so you can verify the DB-backed persistence works before deploying. The client
+# isn't containerized here: run it normally with `npm run dev` against this stack
+# (point .env.local's VITE_API_URL/VITE_MP_SERVER_URL at http://localhost:8080),
+# since the real client deploy target (Cloudflare Pages) never touches Docker.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: coopybird
+      POSTGRES_PASSWORD: coopybird
+      POSTGRES_DB: coopybird
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U coopybird']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      DATABASE_URL: postgres://coopybird:coopybird@postgres:5432/coopybird
+      PORT: 8080
+      ALLOWED_ORIGIN: '*'
+    ports:
+      - '8080:8080'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

@@ -1,34 +1,31 @@
-import fs from 'node:fs';
-import path from 'node:path';
 import type { LeaderboardEntry } from './protocol';
+import { pool } from './db';
 
-const DATA_DIR = path.join(import.meta.dirname, 'data');
-const FILE = path.join(DATA_DIR, 'leaderboard.json');
 const MAX_ENTRIES = 100;
 
-function ensureFile(): void {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-  if (!fs.existsSync(FILE)) fs.writeFileSync(FILE, '[]');
-}
-
-export function loadLeaderboard(): LeaderboardEntry[] {
-  ensureFile();
-  try {
-    return JSON.parse(fs.readFileSync(FILE, 'utf-8'));
-  } catch {
-    return [];
+export async function appendLeaderboardEntries(entries: LeaderboardEntry[]): Promise<LeaderboardEntry[]> {
+  for (const entry of entries) {
+    await pool.query(
+      'INSERT INTO leaderboard_entries (username, score, created_at) VALUES ($1, $2, to_timestamp($3 / 1000.0))',
+      [entry.name, entry.score, entry.timestamp],
+    );
   }
+  // Trim to the top MAX_ENTRIES globally so the table doesn't grow unbounded.
+  await pool.query(`
+    DELETE FROM leaderboard_entries
+    WHERE id NOT IN (SELECT id FROM leaderboard_entries ORDER BY score DESC LIMIT $1)
+  `, [MAX_ENTRIES]);
+  return topLeaderboard(MAX_ENTRIES);
 }
 
-export function appendLeaderboardEntries(entries: LeaderboardEntry[]): LeaderboardEntry[] {
-  const all = [...loadLeaderboard(), ...entries]
-    .sort((a, b) => b.score - a.score)
-    .slice(0, MAX_ENTRIES);
-  ensureFile();
-  fs.writeFileSync(FILE, JSON.stringify(all, null, 2));
-  return all;
-}
-
-export function topLeaderboard(n = 10): LeaderboardEntry[] {
-  return loadLeaderboard().sort((a, b) => b.score - a.score).slice(0, n);
+export async function topLeaderboard(n = 10): Promise<LeaderboardEntry[]> {
+  const result = await pool.query<{ username: string; score: number; created_at: Date }>(
+    'SELECT username, score, created_at FROM leaderboard_entries ORDER BY score DESC LIMIT $1',
+    [n],
+  );
+  return result.rows.map(row => ({
+    name: row.username,
+    score: row.score,
+    timestamp: row.created_at.getTime(),
+  }));
 }
