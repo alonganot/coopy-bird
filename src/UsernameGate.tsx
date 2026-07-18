@@ -87,7 +87,7 @@ export default function UsernameGate({ onReady }: UsernameGateProps) {
     return (
       <div className="username-gate">
         <div className="username-gate-confirm">
-          <p className="username-gate-title">// CALLSIGN TAKEN //</p>
+          <p className="username-gate-title">// USERNAME TAKEN //</p>
           <p style={{marginTop: '10px'}}>"{input}"</p>
           <p>is already in use.</p>
           <button type="button" onClick={logInAsExisting}>Log in as {input}</button>
@@ -100,7 +100,7 @@ export default function UsernameGate({ onReady }: UsernameGateProps) {
   return (
     <div className="username-gate">
       <form onSubmit={submit}>
-        <p className="username-gate-title">// ENTER CALLSIGN //</p>
+        <p className="username-gate-title">// ENTER USERNAME //</p>
         <input
           autoFocus
           value={input}
