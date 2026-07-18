@@ -18,7 +18,7 @@ Open the printed URL, pick a username (no password — it just remembers your sa
 
 Prefer running the server without Docker? Copy `server/.env.example` to `server/.env`, point `DATABASE_URL` at any reachable Postgres instance, and run `npm run server:dev` (loads `server/.env` automatically). Plain `npm run server` doesn't load any `.env` file — that's intentional, since it's also what Docker/Fly production uses, where env vars come from the container/host directly.
 
-Space (or tap) to jump. Score points to earn coins, then spend them in the in-game shop. Works on mobile too — the canvas scales to any screen, and on-screen skill buttons appear automatically on touch devices.
+Space (or tap) to jump. Score points to earn coins, then spend them in the in-game shop. Works on mobile too — the canvas scales to any screen, on-screen skill buttons appear automatically on touch devices, and it's installable as a home-screen app (see PWA below).
 
 ## Features
 
@@ -33,6 +33,7 @@ Space (or tap) to jump. Score points to earn coins, then spend them in the in-ga
   - **Skills** — 9 equippable abilities (max 3 at once): Dash, Shooting, Invisibility, Pocket Dimension (time slow), Shrink, Hover, Earthquake, Freeze Frame, and Shadow Clone (a mirrored clone that doubles your coins and can save you from one death)
 - **Multiplayer**: everyone connected marks "ready" before a match starts; the whole match shares one score; dying respawns you after 5s (with 3s of invulnerability) near whoever's doing best, unless nobody's left alive, in which case the match ends and the shared score is submitted to the multiplayer leaderboard under your account username (there's no separate in-lobby nickname). All 9 skills stay active and are kept in sync across every player, and everyone sees each other's equipped colors, hats, glasses, masks, and shoes too.
 - Fully responsive — scales to any screen size/aspect ratio, with touch controls and larger tap targets on mobile
+- **Installable (PWA)**: add it to your phone's home screen for an app-like, full-screen experience with instant loading from cache. Playing still needs a network connection (accounts/saves/leaderboards are server-side), but a clear "you're offline" message shows up instead of a hang if there's no connection
 - **Accounts**: pick a username (3-16 letters/numbers/underscores) and your coins, unlocks, and high scores follow you to any device that logs in with the same name — no password, by design. Usernames are unique: picking one that's already taken asks whether you want to log in as that user or try a different name. Change your username anytime from the Settings screen (⚙, top-right of the idle screen) — renaming carries your save and leaderboard history with it
 - Everything persists server-side in Postgres (coins, unlocks, high scores, leaderboard entries), with backward-compatible save migration; `localStorage` only remembers which username this browser last used
 
@@ -42,6 +43,7 @@ Space (or tap) to jump. Score points to earn coins, then spend them in the in-ga
 - **Vite + React** as a thin app shell — React mounts a single `<canvas>` and gets out of the way; the actual game loop, physics, and all rendering are hand-rolled Canvas2D, not DOM/JSX
 - **Node + `ws`** for the multiplayer server (`server/`, run via `tsx`, no build step) — a single authoritative process simulating the whole match and broadcasting state to every client, so nobody can desync
 - **Postgres** for all player save data and the leaderboard, via a small REST API on the same server process
+- **`vite-plugin-pwa`** for the installable app shell — generates the web manifest + service worker at build time, no hand-rolled SW code
 - **Vitest** for save-migration unit tests
 
 See [`CLAUDE.md`](./CLAUDE.md) for the full module breakdown, including how the multiplayer server/client and accounts/persistence are structured.
