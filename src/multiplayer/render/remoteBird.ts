@@ -55,10 +55,10 @@ export function drawRemotePlayer(ctx: CanvasRenderingContext2D, p: SnapshotPlaye
     },
   });
 
-  if (p.invulnerable) {
+  if (p.invulnerable || p.levitating) {
     ctx.save();
     ctx.globalAlpha = 0.4 + 0.4 * Math.abs(Math.sin(tick * 0.3));
-    ctx.strokeStyle = '#ffffff';
+    ctx.strokeStyle = p.levitating ? '#7fd8ff' : '#ffffff';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(PLAYER_X, p.y, BIRD_R + 6, 0, Math.PI * 2);
