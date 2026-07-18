@@ -27,6 +27,13 @@ export function drawMpHud(ctx: CanvasRenderingContext2D): void {
     ctx.fillText(p.alive ? '●' : '✕', W - 110, y);
     ctx.fillStyle = p.id === mpState.you ? '#f9ca24' : '#cde';
     ctx.fillText(p.name.slice(0, 10), W - 98, y);
+    if (!p.alive && p.respawnInMs !== null) {
+      const secs = Math.ceil(p.respawnInMs / 1000);
+      ctx.fillStyle = '#ff8899';
+      ctx.font = 'bold 9px "Courier New"';
+      ctx.fillText(`respawning in ${secs}s`, W - 98, y + 10);
+      ctx.font = 'bold 11px "Courier New"';
+    }
   });
   ctx.restore();
 

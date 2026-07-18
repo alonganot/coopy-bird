@@ -26,6 +26,8 @@ export interface SnapshotPlayer {
   vy: number;
   alive: boolean;
   invulnerable: boolean;
+  levitating: boolean;
+  respawnInMs: number | null;
   ready: boolean;
   equippedOrder: SkillId[];
   charges: Partial<Record<SkillId, number>>;
@@ -76,4 +78,7 @@ export const TICK_MS = 1000 / TICK_RATE_HZ;
 export const READY_COUNTDOWN_MS = 3000;
 export const RESPAWN_DELAY_MS = 5000;
 export const INVULNERABILITY_MS = 3000;
+// Slightly under RESPAWN_DELAY_MS, close to INVULNERABILITY_MS — long enough to reorient
+// after respawn, short enough nobody can float indefinitely by staying idle.
+export const LEVITATE_GRACE_MS = 3500;
 export const HOVER_SAFETY_TIMEOUT_MS = 2000;

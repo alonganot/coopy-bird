@@ -31,6 +31,8 @@ function toSnapshotPlayer(p: ServerPlayer, now: number): SnapshotPlayer {
     vy: p.vy,
     alive: p.alive,
     invulnerable: now < p.invulnerableUntil,
+    levitating: p.levitatingUntil !== null,
+    respawnInMs: p.respawnAt !== null ? Math.max(0, p.respawnAt - now) : null,
     ready: p.ready,
     equippedOrder: p.equippedOrder,
     charges: p.charges,
@@ -108,6 +110,7 @@ wss.on('connection', ws => {
         if (player.alive) {
           player.vy = JUMP;
           player.thrustAnim = 1;
+          player.levitatingUntil = null;
           mirrorCloneJump(player);
         }
         break;

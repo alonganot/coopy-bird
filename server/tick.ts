@@ -2,7 +2,7 @@ import { DASH_SPEED_MULTIPLIER, GAP, GRAVITY, H, PIPE_W, SPEED, W } from '../src
 import type { SkillId } from '../src/game/skills/data';
 import type { Pipe } from '../src/game/types';
 import { collides } from './collision';
-import { INVULNERABILITY_MS, READY_COUNTDOWN_MS, RESPAWN_DELAY_MS } from './protocol';
+import { INVULNERABILITY_MS, LEVITATE_GRACE_MS, READY_COUNTDOWN_MS, RESPAWN_DELAY_MS } from './protocol';
 import { aliveCount, allReady, findRespawnReference, resetPlayerForMatch, resetRoomToWaiting, type Room, type ServerPlayer } from './room';
 import { getBirdRadius, grantChargesOnScore, isSkillActive, trySwapToClone, updateSkillsForPlayer, PLAYER_X } from './skills';
 
@@ -51,12 +51,18 @@ function killPlayer(p: ServerPlayer, room: Room, now: number, callbacks: TickCal
 function simulateTick(room: Room, now: number, callbacks: TickCallbacks): void {
   const alivePlayers = [...room.players.values()].filter(p => p.alive);
 
-  // 1. Gravity per alive player
-  alivePlayers.forEach(p => {
+  // 1. Gravity per alive, non-levitating player
+  const grounded = alivePlayers.filter(p => p.levitatingUntil === null);
+  grounded.forEach(p => {
     const timeSlow = isSkillActive(p, 'timeSlow') ? 0.5 : 1;
     if (isSkillActive(p, 'dash')) p.vy *= 0.7;
     p.vy += GRAVITY * timeSlow;
     p.y += p.vy;
+  });
+
+  // 1b. Auto-clear levitation once the grace cap elapses, even without a jump
+  alivePlayers.forEach(p => {
+    if (p.levitatingUntil !== null && now >= p.levitatingUntil) p.levitatingUntil = null;
   });
 
   // 2. Shared pipe speed — most impactful active effect wins: freeze > dash > timeSlow > normal
@@ -109,6 +115,9 @@ function simulateTick(room: Room, now: number, callbacks: TickCallbacks): void {
   // 8. Floor/ceiling bounds
   for (const p of alivePlayers) {
     if (!p.alive) continue;
+    const invulnerable = now < p.invulnerableUntil;
+    const levitating = p.levitatingUntil !== null;
+    if (invulnerable || levitating) continue;
     if (p.y + p.r > H - 50 || p.y - p.r < 0) {
       if (!trySwapToClone(p)) killPlayer(p, room, now, callbacks);
     }
@@ -123,6 +132,7 @@ function simulateTick(room: Room, now: number, callbacks: TickCallbacks): void {
     p.vy = 0;
     p.alive = true;
     p.invulnerableUntil = now + INVULNERABILITY_MS;
+    p.levitatingUntil = now + LEVITATE_GRACE_MS;
     p.respawnAt = null;
     p.aliveSinceFrame = room.frame;
     (Object.keys(p.activeTimer) as SkillId[]).forEach(k => { p.activeTimer[k] = 0; });

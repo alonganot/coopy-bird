@@ -18,6 +18,7 @@ export interface ServerPlayer {
   alive: boolean;
   invulnerableUntil: number;
   respawnAt: number | null;
+  levitatingUntil: number | null;
   aliveSinceFrame: number;
   equippedOrder: SkillId[];
   charges: Partial<Record<SkillId, number>>;
@@ -91,6 +92,7 @@ export function createPlayer(
     alive: true,
     invulnerableUntil: 0,
     respawnAt: null,
+    levitatingUntil: null,
     aliveSinceFrame: 0,
     equippedOrder,
     charges: emptySkillMap(() => 0),
@@ -109,6 +111,7 @@ export function resetPlayerForMatch(p: ServerPlayer, frame: number): void {
   p.alive = true;
   p.invulnerableUntil = 0;
   p.respawnAt = null;
+  p.levitatingUntil = null;
   p.aliveSinceFrame = frame;
   p.charges = emptySkillMap(() => 0);
   p.activeTimer = emptySkillMap(() => 0);
