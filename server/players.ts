@@ -24,3 +24,24 @@ export async function savePlayerData(username: string, gameData: GameData): Prom
     [username, JSON.stringify(gameData)],
   );
 }
+
+export async function usernameExists(username: string): Promise<boolean> {
+  const result = await pool.query('SELECT 1 FROM players WHERE username = $1', [username]);
+  return (result.rowCount ?? 0) > 0;
+}
+
+/**
+ * Renaming is a single UPDATE on the primary key — the `leaderboard_best.username`
+ * foreign key's ON UPDATE CASCADE (see db.ts) propagates the new name to any
+ * leaderboard rows atomically. If `newUsername` is already taken, Postgres throws a
+ * unique-violation (error code 23505) on the primary key, which callers should catch.
+ */
+export async function renamePlayer(oldUsername: string, newUsername: string): Promise<void> {
+  const result = await pool.query(
+    'UPDATE players SET username = $1, updated_at = now() WHERE username = $2',
+    [newUsername, oldUsername],
+  );
+  if ((result.rowCount ?? 0) === 0) {
+    throw new Error(`No player found with username "${oldUsername}"`);
+  }
+}

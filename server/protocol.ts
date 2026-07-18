@@ -41,8 +41,10 @@ export interface LeaderboardEntry {
 
 // --- Client -> Server ---
 export type ClientMessage =
+  // `name` is always the joining player's real account username now (no separate,
+  // editable lobby nickname) — it's also the stable key multiplayer leaderboard
+  // entries are recorded under.
   | { type: 'join'; name: string; color: PlayerColor; props: PlayerProps; equippedOrder: SkillId[] }
-  | { type: 'rename'; name: string }
   | { type: 'ready'; ready: boolean }
   | { type: 'jump' }
   | { type: 'skillActivate'; slot: number }

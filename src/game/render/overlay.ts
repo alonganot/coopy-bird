@@ -47,7 +47,7 @@ export function drawOverlay(ctx: CanvasRenderingContext2D): void {
     ctx.restore();
     drawShopButton(ctx);
   } else if (world.state === 'dead') {
-    const panelH = 60 + world.gameData.highScores.length * 28 + 80;
+    const panelH = 60 + Math.max(world.leaderboard.length, 1) * 28 + 80;
     const panelY = H / 2 - panelH / 2;
     const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.15, W / 2, H / 2, H * 0.75);
     vig.addColorStop(0, 'transparent');
@@ -104,16 +104,15 @@ export function drawOverlay(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = '#7ecfff';
     ctx.font = 'bold 13px "Courier New"';
     ctx.textAlign = 'center';
-    ctx.fillText('HIGH SCORES', W / 2, top + 56);
+    ctx.fillText('LEADERBOARD', W / 2, top + 56);
 
-    world.gameData.highScores.forEach((s, i) => {
-      const labels = ['01', '02', '03', '04', '05'];
+    world.leaderboard.forEach((e, i) => {
       ctx.save();
       if (i === 0) { ctx.shadowBlur = 8; ctx.shadowColor = '#f9ca24'; }
       ctx.fillStyle = i === 0 ? '#f9ca24' : '#7ecfff99';
       ctx.font = `${i === 0 ? 'bold' : ''} 13px "Courier New"`;
       ctx.textAlign = 'center';
-      ctx.fillText(`#${labels[i]}  ${s}`, W / 2, top + 76 + i * 28);
+      ctx.fillText(`#${i + 1}  ${e.name} — ${e.score}`, W / 2, top + 76 + i * 28);
       ctx.restore();
     });
 
@@ -121,7 +120,7 @@ export function drawOverlay(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = restartBlink ? '#7ecfff77' : '#7ecfff22';
     ctx.font = '11px "Courier New"';
     ctx.textAlign = 'center';
-    ctx.fillText('TAP OR SPACE TO RESTART', W / 2, top + 76 + world.gameData.highScores.length * 28 + 10);
+    ctx.fillText('TAP OR SPACE TO RESTART', W / 2, top + 76 + Math.max(world.leaderboard.length, 1) * 28 + 10);
   }
 }
 

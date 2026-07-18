@@ -5,7 +5,7 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { JUMP } from '../src/game/constants';
 import { initSchema } from './db';
 import { handleHttp } from './http';
-import { appendLeaderboardEntries, topLeaderboard } from './leaderboard';
+import { submitScore, topLeaderboard } from './leaderboard';
 import type { ClientMessage, LeaderboardEntry, ServerMessage, SnapshotPlayer } from './protocol';
 import { TICK_MS } from './protocol';
 import { createPlayer, createRoom, type Room, type ServerPlayer } from './room';
@@ -57,12 +57,12 @@ function broadcastSnapshot(leaderboard?: LeaderboardEntry[]): void {
 }
 
 function onMatchEnd(finishedRoom: Room): void {
-  const entries: LeaderboardEntry[] = [...finishedRoom.players.values()].map(p => ({
-    name: p.name,
-    score: finishedRoom.score,
-    timestamp: Date.now(),
-  }));
-  appendLeaderboardEntries(entries).catch(err => console.error('Failed to persist leaderboard entries:', err));
+  // p.name is always the account username now (see the 'join' handler below) — a stable,
+  // real per-player key, unlike the free-text lobby nickname this used to be.
+  finishedRoom.players.forEach(p => {
+    submitScore(p.name, 'multiplayer', finishedRoom.score)
+      .catch(err => console.error('Failed to persist leaderboard score:', err));
+  });
 }
 
 const httpServer = createServer((req, res) => {
@@ -101,11 +101,6 @@ wss.on('connection', ws => {
     if (!player) return;
 
     switch (msg.type) {
-      case 'rename': {
-        const name = msg.name.trim().slice(0, 16);
-        if (name) player.name = name;
-        break;
-      }
       case 'ready':
         player.ready = msg.ready;
         break;
@@ -132,7 +127,7 @@ wss.on('connection', ws => {
         break;
       }
       case 'leaderboardRequest':
-        topLeaderboard(10)
+        topLeaderboard('multiplayer', 10)
           .then(entries => send(ws, { type: 'leaderboard', entries }))
           .catch(err => console.error('Failed to load leaderboard:', err));
         break;
@@ -153,7 +148,7 @@ setInterval(() => {
   const wasEnded = room.phase === 'ended';
   stepRoom(room, now, { onMatchEnd });
   if (!wasEnded && room.phase === 'ended') {
-    topLeaderboard(10)
+    topLeaderboard('multiplayer', 10)
       .then(entries => broadcastSnapshot(entries))
       .catch(err => {
         console.error('Failed to load leaderboard:', err);

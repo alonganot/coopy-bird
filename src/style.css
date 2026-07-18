@@ -69,7 +69,7 @@ canvas {
   display: none;
 }
 
-.lobby-name-input {
+.settings-username-input {
   position: absolute;
   pointer-events: auto;
   padding: 0 10px;
@@ -83,7 +83,7 @@ canvas {
   outline: none;
 }
 
-.lobby-name-input[hidden] {
+.settings-username-input[hidden] {
   display: none;
 }
 
@@ -176,5 +176,34 @@ canvas {
   color: #5a7a8a;
   font-size: 11px;
   max-width: 240px;
+}
+
+.username-gate-confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+  max-width: 260px;
+}
+
+.username-gate-confirm button {
+  padding: 10px 20px;
+  width: 100%;
+  background: rgba(1, 8, 24, 0.85);
+  border: 1.5px solid #f9ca24;
+  border-radius: 8px;
+  color: #f9ca24;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  font-size: 13px;
+  text-shadow: 0 0 6px #f9ca24;
+  cursor: pointer;
+}
+
+.username-gate-confirm button:last-of-type {
+  border-color: #5a7a8a;
+  color: #7ecfff;
+  text-shadow: none;
 }
 

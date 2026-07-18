@@ -17,15 +17,18 @@ export async function initSchema(): Promise<void> {
       updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
     );
   `);
+  // Superseded by leaderboard_best below (undeduped, keyed by an unstable nickname) — dropped, not migrated.
+  await pool.query(`DROP TABLE IF EXISTS leaderboard_entries;`);
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS leaderboard_entries (
-      id          SERIAL PRIMARY KEY,
-      username    TEXT NOT NULL,
+    CREATE TABLE IF NOT EXISTS leaderboard_best (
+      username    TEXT NOT NULL REFERENCES players(username) ON UPDATE CASCADE ON DELETE CASCADE,
+      mode        TEXT NOT NULL CHECK (mode IN ('singleplayer', 'multiplayer')),
       score       INTEGER NOT NULL,
-      created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+      achieved_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+      PRIMARY KEY (username, mode)
     );
   `);
   await pool.query(`
-    CREATE INDEX IF NOT EXISTS idx_leaderboard_score ON leaderboard_entries (score DESC);
+    CREATE INDEX IF NOT EXISTS idx_leaderboard_best_mode_score ON leaderboard_best (mode, score DESC);
   `);
 }

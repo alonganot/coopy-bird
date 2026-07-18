@@ -1,4 +1,8 @@
+import type { LeaderboardEntry } from '../../server/protocol';
 import type { GameData } from './persistence';
+
+export type LeaderboardMode = 'singleplayer' | 'multiplayer';
+export type RenameResult = { ok: true } | { ok: false; reason: 'taken' | 'invalid' };
 
 const DEFAULT_PORT = '8787';
 
@@ -37,4 +41,39 @@ export function pushGameData(username: string, gameData: GameData): void {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ gameData }),
   }).catch(err => console.error('Failed to save game data:', err));
+}
+
+export async function checkUsernameExists(username: string): Promise<boolean> {
+  const res = await fetch(`${resolveApiUrl()}/api/players/${encodeURIComponent(username)}/exists`);
+  if (!res.ok) throw new Error(`Username check failed (${res.status})`);
+  const { exists } = await res.json();
+  return Boolean(exists);
+}
+
+export async function renameUsername(oldUsername: string, newUsername: string): Promise<RenameResult> {
+  const res = await fetch(`${resolveApiUrl()}/api/players/${encodeURIComponent(oldUsername)}/rename`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newUsername }),
+  });
+  if (res.ok) return { ok: true };
+  if (res.status === 409) return { ok: false, reason: 'taken' };
+  return { ok: false, reason: 'invalid' };
+}
+
+/** Fire-and-forget from the caller's perspective — errors are logged, not thrown. */
+export function submitScore(username: string, score: number): void {
+  if (!username || score <= 0) return;
+  fetch(`${resolveApiUrl()}/api/scores`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, score }),
+  }).catch(err => console.error('Failed to submit score:', err));
+}
+
+export async function fetchLeaderboard(mode: LeaderboardMode): Promise<LeaderboardEntry[]> {
+  const res = await fetch(`${resolveApiUrl()}/api/leaderboard/${mode}`);
+  if (!res.ok) throw new Error(`Leaderboard fetch failed (${res.status})`);
+  const { entries } = await res.json();
+  return entries as LeaderboardEntry[];
 }

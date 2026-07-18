@@ -1,31 +1,26 @@
 import type { LeaderboardEntry } from './protocol';
 import { pool } from './db';
 
-const MAX_ENTRIES = 100;
+export type LeaderboardMode = 'singleplayer' | 'multiplayer';
 
-export async function appendLeaderboardEntries(entries: LeaderboardEntry[]): Promise<LeaderboardEntry[]> {
-  for (const entry of entries) {
-    await pool.query(
-      'INSERT INTO leaderboard_entries (username, score, created_at) VALUES ($1, $2, to_timestamp($3 / 1000.0))',
-      [entry.name, entry.score, entry.timestamp],
-    );
-  }
-  // Trim to the top MAX_ENTRIES globally so the table doesn't grow unbounded.
-  await pool.query(`
-    DELETE FROM leaderboard_entries
-    WHERE id NOT IN (SELECT id FROM leaderboard_entries ORDER BY score DESC LIMIT $1)
-  `, [MAX_ENTRIES]);
-  return topLeaderboard(MAX_ENTRIES);
+/** Upserts the player's best score for this mode — a no-op if the new score isn't higher. */
+export async function submitScore(username: string, mode: LeaderboardMode, score: number): Promise<void> {
+  await pool.query(
+    `INSERT INTO leaderboard_best (username, mode, score, achieved_at) VALUES ($1, $2, $3, now())
+     ON CONFLICT (username, mode) DO UPDATE SET score = $3, achieved_at = now()
+     WHERE leaderboard_best.score < $3`,
+    [username, mode, score],
+  );
 }
 
-export async function topLeaderboard(n = 10): Promise<LeaderboardEntry[]> {
-  const result = await pool.query<{ username: string; score: number; created_at: Date }>(
-    'SELECT username, score, created_at FROM leaderboard_entries ORDER BY score DESC LIMIT $1',
-    [n],
+export async function topLeaderboard(mode: LeaderboardMode, n = 10): Promise<LeaderboardEntry[]> {
+  const result = await pool.query<{ username: string; score: number; achieved_at: Date }>(
+    'SELECT username, score, achieved_at FROM leaderboard_best WHERE mode = $1 ORDER BY score DESC LIMIT $2',
+    [mode, n],
   );
   return result.rows.map(row => ({
     name: row.username,
     score: row.score,
-    timestamp: row.created_at.getTime(),
+    timestamp: row.achieved_at.getTime(),
   }));
 }
