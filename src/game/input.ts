@@ -1,4 +1,5 @@
 import { H, JUMP, W } from './constants';
+import { handleSettingsButtonClick, handleSettingsPanelClick } from './settingsPanel';
 import { handleShopClick } from './shop/shop';
 import type { SkillId } from './skills/data';
 import { activateSkill, mirrorCloneJump, startHover, stopHover } from './skills/skills';
@@ -16,10 +17,12 @@ export function jump(): void {
 
 export function handleCanvasClick(mx: number, my: number): void {
   if (world.shopState === 'shop') { handleShopClick(mx, my); return; }
+  if (world.settingsState === 'settings') { handleSettingsPanelClick(mx, my); return; }
   if (world.state === 'idle' && mx >= W / 2 - 50 && mx <= W / 2 + 50 && my >= H / 2 + 38 && my <= H / 2 + 68) {
     world.shopState = 'shop';
     return;
   }
+  if (world.state === 'idle' && handleSettingsButtonClick(mx, my)) return;
   jump();
 }
 
@@ -38,7 +41,7 @@ export function releaseSkillSlot(slot: number): void {
 
 export function attachInput(canvas: HTMLCanvasElement): () => void {
   const onKeyDown = (e: KeyboardEvent) => {
-    if (world.shopState) return;
+    if (world.shopState || world.settingsState) return;
     if (e.code === 'Space') jump();
     const slot = SKILL_SLOT_KEYS[e.code];
     if (slot === undefined) return;

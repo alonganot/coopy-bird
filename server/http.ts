@@ -1,9 +1,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { migrateData } from '../src/game/persistence';
-import { getOrCreatePlayer, savePlayerData } from './players';
+import { submitScore, topLeaderboard, type LeaderboardMode } from './leaderboard';
+import { getOrCreatePlayer, renamePlayer, savePlayerData, usernameExists } from './players';
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,16}$/;
 const MAX_BODY_BYTES = 64 * 1024; // GameData is a few KB at most; this is a generous ceiling.
+/** Postgres unique_violation error code — thrown by renamePlayer() when the target username is taken. */
+const PG_UNIQUE_VIOLATION = '23505';
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -69,6 +72,39 @@ export async function handleHttp(req: IncomingMessage, res: ServerResponse): Pro
     return;
   }
 
+  const existsMatch = url.pathname.match(/^\/api\/players\/([^/]+)\/exists$/);
+  if (req.method === 'GET' && existsMatch) {
+    const username = decodeURIComponent(existsMatch[1]);
+    if (!USERNAME_RE.test(username)) {
+      sendJson(res, 400, { error: 'Invalid username' });
+      return;
+    }
+    sendJson(res, 200, { exists: await usernameExists(username) });
+    return;
+  }
+
+  const renameMatch = url.pathname.match(/^\/api\/players\/([^/]+)\/rename$/);
+  if (req.method === 'PUT' && renameMatch) {
+    const oldUsername = decodeURIComponent(renameMatch[1]);
+    try {
+      const body = JSON.parse(await readBody(req));
+      const newUsername: unknown = body?.newUsername;
+      if (typeof newUsername !== 'string' || !USERNAME_RE.test(newUsername)) {
+        sendJson(res, 400, { error: 'Username must be 3-16 letters, numbers, or underscores' });
+        return;
+      }
+      await renamePlayer(oldUsername, newUsername);
+      sendJson(res, 200, { username: newUsername });
+    } catch (err) {
+      if ((err as { code?: string }).code === PG_UNIQUE_VIOLATION) {
+        sendJson(res, 409, { error: 'taken' });
+      } else {
+        sendJson(res, 404, { error: 'Player not found' });
+      }
+    }
+    return;
+  }
+
   const playerMatch = url.pathname.match(/^\/api\/players\/([^/]+)$/);
   if (req.method === 'PUT' && playerMatch) {
     const username = decodeURIComponent(playerMatch[1]);
@@ -84,6 +120,34 @@ export async function handleHttp(req: IncomingMessage, res: ServerResponse): Pro
     } catch {
       sendJson(res, 400, { error: 'Invalid request' });
     }
+    return;
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/scores') {
+    try {
+      const body = JSON.parse(await readBody(req));
+      const username: unknown = body?.username;
+      const score: unknown = body?.score;
+      if (typeof username !== 'string' || !USERNAME_RE.test(username)) {
+        sendJson(res, 400, { error: 'Invalid username' });
+        return;
+      }
+      if (typeof score !== 'number' || !Number.isInteger(score) || score < 0 || score > 1_000_000) {
+        sendJson(res, 400, { error: 'Invalid score' });
+        return;
+      }
+      await submitScore(username, 'singleplayer', score);
+      sendJson(res, 200, { ok: true });
+    } catch {
+      sendJson(res, 400, { error: 'Invalid request' });
+    }
+    return;
+  }
+
+  const leaderboardMatch = url.pathname.match(/^\/api\/leaderboard\/(singleplayer|multiplayer)$/);
+  if (req.method === 'GET' && leaderboardMatch) {
+    const mode = leaderboardMatch[1] as LeaderboardMode;
+    sendJson(res, 200, { entries: await topLeaderboard(mode, 10) });
     return;
   }
 

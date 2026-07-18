@@ -1,3 +1,4 @@
+import { fetchLeaderboard, submitScore } from './api';
 import { GAP, H, PIPE_W } from './constants';
 import { getActiveColorItem } from './shop/data';
 import { SHOP_SKILLS } from './skills/data';
@@ -44,6 +45,10 @@ export function onDeath(): void {
   world.gameData.highScores = world.gameData.highScores.slice(0, 5);
   world.isNewBest = world.score > 0 && world.score > prevBest;
   saveData();
+  submitScore(world.username, world.score);
+  fetchLeaderboard('singleplayer')
+    .then(entries => { world.leaderboard = entries; })
+    .catch(err => console.error('Failed to fetch leaderboard:', err));
   for (let i = 0; i < 24; i++) {
     const angle = (Math.PI * 2 / 24) * i;
     const spd = 2 + Math.random() * 4;

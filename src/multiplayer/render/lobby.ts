@@ -4,9 +4,7 @@ import { mpState, you } from '../mpState';
 
 const TITLE_Y_OFFSET = 34;
 const MESSAGE_Y_OFFSET = 56;
-const NAME_ROW_Y_OFFSET = 74;
-const NAME_ROW_H = 26;
-const PLAYERS_START_OFFSET = NAME_ROW_Y_OFFSET + NAME_ROW_H + 14;
+const PLAYERS_START_OFFSET = MESSAGE_Y_OFFSET + 32;
 const PLAYER_ROW_H = 24;
 const READY_GAP_ABOVE = 16;
 const READY_H = 36;
@@ -17,11 +15,6 @@ function computeLayout() {
   const panelH = PLAYERS_START_OFFSET + n * PLAYER_ROW_H + READY_GAP_ABOVE + READY_H + BOTTOM_PAD;
   const panelY = H / 2 - panelH / 2;
   return { n, panelH, panelY };
-}
-
-export function getNameInputRect() {
-  const { panelY } = computeLayout();
-  return { x: W / 2 - 90, y: panelY + NAME_ROW_Y_OFFSET, w: 180, h: NAME_ROW_H };
 }
 
 export function getReadyButtonRect() {

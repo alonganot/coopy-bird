@@ -1,3 +1,4 @@
+import type { LeaderboardEntry } from '../../server/protocol';
 import { pushGameData } from './api';
 import { H, W } from './constants';
 import { migrateData, type GameData } from './persistence';
@@ -30,6 +31,9 @@ export interface World {
   shopState: 'shop' | null;
   shopTab: ShopTabId;
   propsSubTab: PropsSubTabId;
+  settingsState: 'settings' | null;
+  /** Global top-10 single-player leaderboard, fetched on death (see scoring.ts's onDeath). */
+  leaderboard: LeaderboardEntry[];
   tick: number;
   glitchTimer: number;
   glitchActive: boolean;
@@ -56,6 +60,8 @@ export const world: World = {
   shopState: null,
   shopTab: 'props',
   propsSubTab: 'colors',
+  settingsState: null,
+  leaderboard: [],
   tick: 0,
   glitchTimer: 150,
   glitchActive: false,

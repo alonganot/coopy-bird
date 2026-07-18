@@ -8,6 +8,8 @@ import { drawHUD } from './render/hud';
 import { drawOverlay, drawScanlines } from './render/overlay';
 import { drawParticles, drawProjectiles } from './render/particles';
 import { drawPipe } from './render/pipe';
+import { attachSettingsInput } from './settingsInput';
+import { createSettingsInputAdapter, drawSettingsButton, drawSettingsPanel, getUsernameInputRect } from './settingsPanel';
 import { getActiveColorItem, getActiveGlassesItem, getActiveHatItem, getActiveMaskItem, getActiveShoeItem } from './shop/data';
 import { drawShop } from './shop/shop';
 import { SHOP_SKILLS } from './skills/data';
@@ -31,10 +33,11 @@ export function createGame(canvas: HTMLCanvasElement, controlsContainer?: HTMLEl
   let detachInput: (() => void) | null = null;
   let skillButtons: ReturnType<typeof attachSkillButtons> | null = null;
   let modeSwitch: ReturnType<typeof attachModeSwitch> | null = null;
+  let settingsInput: ReturnType<typeof attachSettingsInput> | null = null;
 
   function loop() {
     world.tick++;
-    if (world.state === 'idle' && !world.shopState) {
+    if (world.state === 'idle' && !world.shopState && !world.settingsState) {
       if (--world.glitchTimer <= 0) {
         world.glitchActive = !world.glitchActive;
         world.glitchTimer = world.glitchActive ? 7 : Math.floor(Math.random() * 180 + 100);
@@ -75,11 +78,14 @@ export function createGame(canvas: HTMLCanvasElement, controlsContainer?: HTMLEl
     drawParticles(ctx, world.particles);
     drawHUD(ctx);
     drawOverlay(ctx);
+    if (world.state === 'idle' && !world.shopState) drawSettingsButton(ctx);
     if (world.shopState === 'shop') drawShop(ctx);
+    if (world.settingsState === 'settings') drawSettingsPanel(ctx);
     drawScanlines(ctx);
     update();
     skillButtons?.sync();
     modeSwitch?.sync();
+    settingsInput?.sync();
 
     rafId = requestAnimationFrame(loop);
   }
@@ -108,11 +114,16 @@ export function createGame(canvas: HTMLCanvasElement, controlsContainer?: HTMLEl
             onToggle: options.onSwitchMode,
             getPlacement() {
               // Directly under the idle screen's shop button, same size, as another row of that card.
-              if (world.state !== 'idle' || world.shopState) return null;
+              if (world.state !== 'idle' || world.shopState || world.settingsState) return null;
               return { x: W / 2 - 52, y: H / 2 + 76, w: 104, h: 30 };
             },
           });
         }
+        settingsInput = attachSettingsInput(
+          controlsContainer,
+          createSettingsInputAdapter(),
+          () => (world.settingsState === 'settings' ? getUsernameInputRect() : null),
+        );
       }
       rafId = requestAnimationFrame(loop);
     },
@@ -125,6 +136,8 @@ export function createGame(canvas: HTMLCanvasElement, controlsContainer?: HTMLEl
       skillButtons = null;
       modeSwitch?.detach();
       modeSwitch = null;
+      settingsInput?.detach();
+      settingsInput = null;
     },
   };
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { fetchOrCreateSession } from './game/api';
+import { checkUsernameExists, fetchOrCreateSession } from './game/api';
 import { getStoredUsername, migrateData, setStoredUsername } from './game/persistence';
 import { world } from './game/state';
 
@@ -17,7 +17,7 @@ async function establishSession(username: string): Promise<void> {
 }
 
 export default function UsernameGate({ onReady }: UsernameGateProps) {
-  const [status, setStatus] = useState<'checking' | 'needsUsername' | 'connecting'>('checking');
+  const [status, setStatus] = useState<'checking' | 'needsUsername' | 'confirmTaken' | 'connecting'>('checking');
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
 
@@ -27,26 +27,52 @@ export default function UsernameGate({ onReady }: UsernameGateProps) {
       setStatus('needsUsername');
       return;
     }
+    // Returning to a remembered username on this device is already an implicit "log in as
+    // this user" — no need to re-confirm the way a freshly-typed existing name does below.
     establishSession(stored)
       .then(onReady)
       .catch(() => setStatus('needsUsername'));
   }, []);
 
-  function submit(e: FormEvent): void {
+  function logInAsExisting(): void {
+    setError('');
+    setStatus('connecting');
+    establishSession(input.trim())
+      .then(onReady)
+      .catch(() => {
+        setError('Could not connect — try again');
+        setStatus('needsUsername');
+      });
+  }
+
+  function tryDifferentName(): void {
+    setError('');
+    setInput('');
+    setStatus('needsUsername');
+  }
+
+  async function submit(e: FormEvent): Promise<void> {
     e.preventDefault();
     const username = input.trim();
     if (!USERNAME_RE.test(username)) {
       setError('3-16 letters, numbers, or underscores');
       return;
     }
+    setInput(username);
     setError('');
     setStatus('connecting');
-    establishSession(username)
-      .then(onReady)
-      .catch(() => {
-        setError('Could not connect — try again');
-        setStatus('needsUsername');
-      });
+    try {
+      const exists = await checkUsernameExists(username);
+      if (exists) {
+        setStatus('confirmTaken');
+        return;
+      }
+      await establishSession(username);
+      onReady();
+    } catch {
+      setError('Could not connect — try again');
+      setStatus('needsUsername');
+    }
   }
 
   if (status === 'checking') {
@@ -57,10 +83,24 @@ export default function UsernameGate({ onReady }: UsernameGateProps) {
     );
   }
 
+  if (status === 'confirmTaken') {
+    return (
+      <div className="username-gate">
+        <div className="username-gate-confirm">
+          <p className="username-gate-title">// USERNAME TAKEN //</p>
+          <p style={{marginTop: '10px'}}>"{input}"</p>
+          <p>is already in use.</p>
+          <button type="button" onClick={logInAsExisting}>Log in as {input}</button>
+          <button type="button" onClick={tryDifferentName}>Try a different name</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="username-gate">
       <form onSubmit={submit}>
-        <p className="username-gate-title">// ENTER CALLSIGN //</p>
+        <p className="username-gate-title">// ENTER USERNAME //</p>
         <input
           autoFocus
           value={input}
@@ -73,7 +113,8 @@ export default function UsernameGate({ onReady }: UsernameGateProps) {
           {status === 'connecting' ? 'Connecting...' : 'Continue'}
         </button>
         {error && <p className="username-gate-error">{error}</p>}
-        <p className="username-gate-hint">No password — this name just remembers your save.</p>
+        <p className="username-gate-hint">No password.</p>
+        <p className="username-gate-hint">this name just remembers your save.</p>
       </form>
     </div>
   );

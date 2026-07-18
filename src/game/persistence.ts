@@ -23,8 +23,6 @@ export interface GameData {
   /** Always fully populated (one entry per SHOP_SKILLS) by migrateSkillData before use. */
   activeSkills: Record<SkillId, boolean>;
   equippedOrder: SkillId[];
-  /** Chosen once via the multiplayer name-entry prompt; empty string means "not yet chosen". */
-  displayName: string;
 }
 
 /** Fills in defaults for any missing/legacy field — applied to whatever the server returns for a username, same as it once was applied to a raw localStorage blob. */
@@ -45,7 +43,6 @@ export function migrateData(d: Partial<GameData>): GameData {
   if (d.activeMask === undefined) d.activeMask = '';
   if (!d.unlockedShoes) d.unlockedShoes = [];
   if (d.activeShoe === undefined) d.activeShoe = '';
-  if (d.displayName === undefined) d.displayName = '';
   return migrateSkillData(d as GameData);
 }
 

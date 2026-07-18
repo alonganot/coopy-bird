@@ -16,13 +16,14 @@ npm run dev
 
 Open the printed URL, pick a username (no password — it just remembers your save), and play. Then hit "MULTIPLAYER" from the main screen to try real-time multiplayer. `npm run dev` runs with `--host`, and the client auto-detects the server's address, so anyone on the same network can join by opening your machine's printed network URL — no config needed.
 
-Prefer running the server without Docker? `npm run server` still works — just point `DATABASE_URL` at any reachable Postgres instance first (see `server/.env.example`).
+Prefer running the server without Docker? Copy `server/.env.example` to `server/.env`, point `DATABASE_URL` at any reachable Postgres instance, and run `npm run server:dev` (loads `server/.env` automatically). Plain `npm run server` doesn't load any `.env` file — that's intentional, since it's also what Docker/Fly production uses, where env vars come from the container/host directly.
 
 Space (or tap) to jump. Score points to earn coins, then spend them in the in-game shop. Works on mobile too — the canvas scales to any screen, and on-screen skill buttons appear automatically on touch devices.
 
 ## Features
 
-- Classic jump-and-dodge gameplay with a coin economy and a top-5 local high-score board
+- Classic jump-and-dodge gameplay with a coin economy
+- **Global leaderboards**: single-player and multiplayer each have their own cross-player leaderboard — every player appears once, at their personal-best score (not a log of every run)
 - **Shop** with four tabs, each with its own unlock/equip flow:
   - **Props** — five sub-tabs of cosmetics that can all be equipped at once:
     - **Colors** — 8 bird skins
@@ -30,10 +31,10 @@ Space (or tap) to jump. Score points to earn coins, then spend them in the in-ga
   - **Pipes** — 6 pipe designs, from a plain neon tube up to a crystal-spike prism column
   - **Scene** — 6 backgrounds (synthwave, jungle, ocean, desert, snow, volcano), each with its own ambient particle effect
   - **Skills** — 9 equippable abilities (max 3 at once): Dash, Shooting, Invisibility, Pocket Dimension (time slow), Shrink, Hover, Earthquake, Freeze Frame, and Shadow Clone (a mirrored clone that doubles your coins and can save you from one death)
-- **Multiplayer**: everyone connected marks "ready" before a match starts; the whole match shares one score; dying respawns you after 5s (with 3s of invulnerability) near whoever's doing best, unless nobody's left alive, in which case the match ends and the shared score is submitted to a leaderboard under everyone's own chosen name. All 9 skills stay active and are kept in sync across every player, and everyone sees each other's equipped colors, hats, glasses, masks, and shoes too.
+- **Multiplayer**: everyone connected marks "ready" before a match starts; the whole match shares one score; dying respawns you after 5s (with 3s of invulnerability) near whoever's doing best, unless nobody's left alive, in which case the match ends and the shared score is submitted to the multiplayer leaderboard under your account username (there's no separate in-lobby nickname). All 9 skills stay active and are kept in sync across every player, and everyone sees each other's equipped colors, hats, glasses, masks, and shoes too.
 - Fully responsive — scales to any screen size/aspect ratio, with touch controls and larger tap targets on mobile
-- **Accounts**: pick a username (3-16 letters/numbers/underscores) and your coins, unlocks, and high scores follow you to any device that logs in with the same name — no password, by design; it's just a claimed save slot, not a secured account
-- Everything persists server-side in Postgres (coins, unlocks, high scores, your multiplayer display name), with backward-compatible save migration; `localStorage` only remembers which username this browser last used
+- **Accounts**: pick a username (3-16 letters/numbers/underscores) and your coins, unlocks, and high scores follow you to any device that logs in with the same name — no password, by design. Usernames are unique: picking one that's already taken asks whether you want to log in as that user or try a different name. Change your username anytime from the Settings screen (⚙, top-right of the idle screen) — renaming carries your save and leaderboard history with it
+- Everything persists server-side in Postgres (coins, unlocks, high scores, leaderboard entries), with backward-compatible save migration; `localStorage` only remembers which username this browser last used
 
 ## Tech stack
 

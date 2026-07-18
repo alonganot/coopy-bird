@@ -5,9 +5,8 @@ import { drawBg } from '../game/render/background';
 import { drawScanlines } from '../game/render/overlay';
 import { drawPipe } from '../game/render/pipe';
 import { getActiveColorItem, getActiveGlassesItem, getActiveHatItem, getActiveMaskItem, getActiveShoeItem } from '../game/shop/data';
-import { saveData, world } from '../game/state';
+import { world } from '../game/state';
 import { connect, type Connection } from './connection';
-import { attachNameInput } from './nameInput';
 import { applyServerMessage, mpState, resetMpState, you } from './mpState';
 import { attachMultiplayerInput, pressSkillSlot, releaseSkillSlot } from './mpInput';
 import { drawLobby, getReadyButtonRect } from './render/lobby';
@@ -35,7 +34,6 @@ export function createMultiplayerGame(
   let conn: Connection | null = null;
   let skillButtons: ReturnType<typeof attachSkillButtons> | null = null;
   let modeSwitch: ReturnType<typeof attachModeSwitch> | null = null;
-  let nameInput: ReturnType<typeof attachNameInput> | null = null;
 
   function loop() {
     mpState.tick++;
@@ -48,20 +46,16 @@ export function createMultiplayerGame(
     drawScanlines(ctx);
     skillButtons?.sync();
     modeSwitch?.sync();
-    nameInput?.sync();
     rafId = requestAnimationFrame(loop);
   }
 
   function join(): void {
     const gameData = world.gameData;
-    if (!gameData.displayName) {
-      gameData.displayName = world.username || `Player${Math.floor(Math.random() * 9000 + 1000)}`;
-      saveData();
-    }
     const col = getActiveColorItem(gameData);
     conn!.send({
       type: 'join',
-      name: gameData.displayName,
+      // Always the real account username now — there's no separate, editable lobby nickname.
+      name: world.username,
       color: { body: col.body, wing: col.wing, glow: col.glow },
       props: {
         hat: getActiveHatItem(gameData)?.id ?? '',
@@ -106,14 +100,6 @@ export function createMultiplayerGame(
             },
           });
         }
-        nameInput = attachNameInput(controlsContainer, {
-          getInitialValue: () => world.gameData.displayName,
-          onCommit(name) {
-            world.gameData.displayName = name;
-            saveData();
-            conn?.send({ type: 'rename', name });
-          },
-        });
       }
       rafId = requestAnimationFrame(loop);
     },
@@ -126,8 +112,6 @@ export function createMultiplayerGame(
       skillButtons = null;
       modeSwitch?.detach();
       modeSwitch = null;
-      nameInput?.detach();
-      nameInput = null;
       conn?.close();
       conn = null;
     },

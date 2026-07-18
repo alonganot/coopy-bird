@@ -132,12 +132,12 @@ export function drawShop(ctx: CanvasRenderingContext2D): void {
   ctx.stroke();
   ctx.restore();
 
-  drawCoin(ctx, px + 20, py + 62, 9, 1);
+  drawCoin(ctx, px + 20, py + 57, 9, 1);
   ctx.save();
   ctx.fillStyle = '#f9ca24';
   ctx.font = '13px "Courier New"';
   ctx.textAlign = 'left';
-  ctx.fillText(world.gameData.totalCoins + ' coins', px + 32, py + 67);
+  ctx.fillText(world.gameData.totalCoins + ' coins', px + 32, py + 60);
   ctx.restore();
 
   drawShopTabs(ctx, px, py, pw);

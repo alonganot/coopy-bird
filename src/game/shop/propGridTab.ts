@@ -15,7 +15,7 @@ interface ItemRect<T> { item: T; x: number; y: number; w: number; h: number }
 export function getPropGridRects<T extends GridItem>(items: T[], px: number, py: number, pw: number): ItemRect<T>[] {
   const cols = 2, itemW = 128, itemH = 68, gapX = 14, gapY = 10;
   const gridX = px + (pw - cols * itemW - (cols - 1) * gapX) / 2;
-  const gridY = py + 112;
+  const gridY = py + 132;
   return items.map((item, i) => ({
     item,
     x: gridX + (i % cols) * (itemW + gapX),
