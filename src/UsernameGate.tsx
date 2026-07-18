@@ -16,6 +16,14 @@ async function establishSession(username: string): Promise<void> {
   setStoredUsername(username);
 }
 
+/** Distinguishes "no network at all" from a generic server/request failure, for a clearer message. */
+function connectionErrorMessage(err: unknown): string {
+  const isNetworkError = !navigator.onLine || err instanceof TypeError;
+  return isNetworkError
+    ? "You're offline — connect to the internet to play"
+    : 'Could not connect — try again';
+}
+
 export default function UsernameGate({ onReady }: UsernameGateProps) {
   const [status, setStatus] = useState<'checking' | 'needsUsername' | 'confirmTaken' | 'connecting'>('checking');
   const [input, setInput] = useState('');
@@ -31,7 +39,10 @@ export default function UsernameGate({ onReady }: UsernameGateProps) {
     // this user" — no need to re-confirm the way a freshly-typed existing name does below.
     establishSession(stored)
       .then(onReady)
-      .catch(() => setStatus('needsUsername'));
+      .catch(err => {
+        setError(connectionErrorMessage(err));
+        setStatus('needsUsername');
+      });
   }, []);
 
   function logInAsExisting(): void {
@@ -39,8 +50,8 @@ export default function UsernameGate({ onReady }: UsernameGateProps) {
     setStatus('connecting');
     establishSession(input.trim())
       .then(onReady)
-      .catch(() => {
-        setError('Could not connect — try again');
+      .catch(err => {
+        setError(connectionErrorMessage(err));
         setStatus('needsUsername');
       });
   }
@@ -69,8 +80,8 @@ export default function UsernameGate({ onReady }: UsernameGateProps) {
       }
       await establishSession(username);
       onReady();
-    } catch {
-      setError('Could not connect — try again');
+    } catch (err) {
+      setError(connectionErrorMessage(err));
       setStatus('needsUsername');
     }
   }
