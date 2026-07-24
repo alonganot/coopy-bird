@@ -12,7 +12,9 @@ import { attachMultiplayerInput, pressSkillSlot, releaseSkillSlot } from './mpIn
 import { drawLobby, getReadyButtonRect } from './render/lobby';
 import { drawMpHud } from './render/mpHud';
 import { drawMpOverlay } from './render/mpOverlay';
+import { getSmoothedPipeX, preparePipeSmoothingFrame, resetPipeSmoothing } from './render/pipeSmoothing';
 import { drawRemotePlayer } from './render/remoteBird';
+import { pruneSmoothingState, resetSmoothing } from './render/remoteSmoothing';
 
 export interface CreateMultiplayerGameOptions {
   onSwitchMode?: () => void;
@@ -34,12 +36,19 @@ export function createMultiplayerGame(
   let conn: Connection | null = null;
   let skillButtons: ReturnType<typeof attachSkillButtons> | null = null;
   let modeSwitch: ReturnType<typeof attachModeSwitch> | null = null;
+  let lastFrameMs: number | null = null;
 
-  function loop() {
+  function loop(nowMs: number) {
+    if (lastFrameMs === null) lastFrameMs = nowMs;
+    const dtMs = Math.min(100, nowMs - lastFrameMs);
+    lastFrameMs = nowMs;
+
     mpState.tick++;
     drawBg(ctx);
-    mpState.pipes.forEach(p => drawPipe(ctx, p));
-    mpState.players.forEach(p => drawRemotePlayer(ctx, p, mpState.tick, p.id === mpState.you));
+    preparePipeSmoothingFrame(mpState.pipes.length);
+    mpState.pipes.forEach((p, i) => drawPipe(ctx, p, getSmoothedPipeX(i, p.x, dtMs)));
+    mpState.players.forEach(p => drawRemotePlayer(ctx, p, mpState.tick, p.id === mpState.you, dtMs));
+    pruneSmoothingState();
     drawMpHud(ctx);
     if (mpState.phase === 'waiting' || mpState.phase === 'ready-check' || mpState.phase === 'countdown') drawLobby(ctx);
     if (mpState.phase === 'ended') drawMpOverlay(ctx);
@@ -70,6 +79,7 @@ export function createMultiplayerGame(
   return {
     start(): void {
       resetMpState();
+      lastFrameMs = null;
       conn = connect(applyServerMessage);
       join();
 
@@ -114,6 +124,8 @@ export function createMultiplayerGame(
       modeSwitch = null;
       conn?.close();
       conn = null;
+      resetSmoothing();
+      resetPipeSmoothing();
     },
   };
 }

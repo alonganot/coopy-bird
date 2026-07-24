@@ -44,17 +44,22 @@ function toSnapshotPlayer(p: ServerPlayer, now: number): SnapshotPlayer {
 function broadcastSnapshot(leaderboard?: LeaderboardEntry[]): void {
   const now = Date.now();
   const players = [...room.players.values()].map(p => toSnapshotPlayer(p, now));
+  // `you` is the only field that varies per client — stringify the shared (and by far
+  // the largest) part of the payload once per tick instead of once per connected
+  // client, then splice each client's own id into the already-serialized string.
+  const base = {
+    type: 'snapshot' as const,
+    phase: room.phase,
+    countdownEndsAt: room.countdownEndsAt,
+    score: room.score,
+    pipes: room.pipes,
+    players,
+    leaderboard,
+  };
+  const prefix = JSON.stringify(base).slice(0, -1); // drop trailing '}'
   room.players.forEach(p => {
-    send(p.ws, {
-      type: 'snapshot',
-      phase: room.phase,
-      countdownEndsAt: room.countdownEndsAt,
-      score: room.score,
-      pipes: room.pipes,
-      players,
-      you: p.id,
-      leaderboard,
-    });
+    if (p.ws.readyState !== p.ws.OPEN) return;
+    p.ws.send(`${prefix},"you":${JSON.stringify(p.id)}}`);
   });
 }
 
@@ -146,10 +151,32 @@ wss.on('connection', ws => {
   });
 });
 
+// simulateTick() advances game time by a fixed amount per call, so — same as the
+// single-player client loop — it must run at a rate derived from real elapsed time
+// rather than assuming every setInterval firing represents exactly one tick's worth of
+// wall-clock time. Under any load that makes the event loop fall behind (GC pauses, a
+// slow host, other work competing for the same process), Node just fires the callback
+// again as soon as it's free rather than catching up — without this accumulator, that
+// silently makes the whole simulated world (gravity, pipe speed, scoring) run in slow
+// motion in real time, exactly the bug already fixed for single-player's rAF loop.
+let lastTickTime = Date.now();
+let tickAccumulator = 0;
+const MAX_TICKS_PER_INTERVAL = 5; // avoids a catch-up burst after e.g. an event-loop stall
+
 setInterval(() => {
   const now = Date.now();
+  tickAccumulator += Math.min(now - lastTickTime, 250);
+  lastTickTime = now;
+
   const wasEnded = room.phase === 'ended';
-  stepRoom(room, now, { onMatchEnd });
+  let steps = 0;
+  while (tickAccumulator >= TICK_MS && steps < MAX_TICKS_PER_INTERVAL) {
+    stepRoom(room, Date.now(), { onMatchEnd });
+    tickAccumulator -= TICK_MS;
+    steps++;
+  }
+  if (steps === 0) return; // not enough real time has elapsed yet for another tick
+
   if (!wasEnded && room.phase === 'ended') {
     topLeaderboard('multiplayer', 10)
       .then(entries => broadcastSnapshot(entries))

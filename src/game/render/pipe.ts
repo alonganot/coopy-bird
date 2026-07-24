@@ -4,7 +4,18 @@ import type { PipeItem } from '../shop/types';
 import { world } from '../state';
 import type { Pipe } from '../types';
 
-export function drawPipe(ctx: CanvasRenderingContext2D, p: Pipe): void {
+// Barrel/cap gradients only vary with the equipped pipe skin, not the pipe's scrolling
+// x position — cached in LOCAL coordinates (origin-relative) and keyed by the stable
+// PipeItem reference from SHOP_PIPES, positioned per-draw via ctx.translate instead of
+// baking the absolute x into the gradient every frame.
+const barrelGradCache = new WeakMap<PipeItem, CanvasGradient>();
+const capGradCache = new WeakMap<PipeItem, CanvasGradient>();
+
+// renderX optionally overrides p.x for positioning only (multiplayer's client-side
+// smoothing of the pipe's scrolling position) — everything else (glow-phase animation
+// state, mutated in place on p, topH, sinking) is unaffected and still reads from p.
+export function drawPipe(ctx: CanvasRenderingContext2D, p: Pipe, renderX?: number): void {
+  const x = renderX ?? p.x;
   ctx.save();
   if (p.sinking) ctx.globalAlpha = Math.max(0, p.sinkTimer! / p.sinkDuration!);
   p.glowPhase = (p.glowPhase || 0) + 0.04;
@@ -15,38 +26,50 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: Pipe): void {
   const overhang = item.overhang;
 
   function drawBarrel(x: number, y: number, w: number, h: number) {
-    const g = ctx.createLinearGradient(x, 0, x + w, 0);
-    item.barrelColors.forEach(([pos, color]) => g.addColorStop(pos, color));
+    let g = barrelGradCache.get(item);
+    if (!g) {
+      g = ctx.createLinearGradient(0, 0, w, 0);
+      item.barrelColors.forEach(([pos, color]) => g!.addColorStop(pos, color));
+      barrelGradCache.set(item, g);
+    }
+    ctx.save();
+    ctx.translate(x, y);
     ctx.fillStyle = g;
     ctx.strokeStyle = `rgba(${item.barrelGlow},${0.3 + glow * 0.4})`;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.rect(x, y, w, h);
+    ctx.rect(0, 0, w, h);
     ctx.fill();
     ctx.stroke();
     ctx.save();
     ctx.globalAlpha = 0.15 + glow * 0.1;
     ctx.fillStyle = item.stripeColor;
-    ctx.fillRect(x + 2, y, 4, h);
+    ctx.fillRect(2, 0, 4, h);
     ctx.restore();
     ctx.save();
     ctx.globalAlpha = 0.07;
-    for (let ly = y; ly < y + h; ly += 8) {
+    for (let ly = 0; ly < h; ly += 8) {
       ctx.fillStyle = item.scanlineColor;
-      ctx.fillRect(x, ly, w, 1);
+      ctx.fillRect(0, ly, w, 1);
     }
+    ctx.restore();
     ctx.restore();
   }
 
   function drawCap(x: number, y: number, ch: number, flip: boolean) {
     const capX = x - overhang;
     const capW = PIPE_W + overhang * 2;
+    let g = capGradCache.get(item);
+    if (!g) {
+      g = ctx.createLinearGradient(0, 0, capW, 0);
+      item.capColors.forEach(([pos, color]) => g!.addColorStop(pos, color));
+      capGradCache.set(item, g);
+    }
     ctx.save();
+    ctx.translate(capX, y);
     ctx.shadowBlur = 10 + glow * 12;
     ctx.shadowColor = `rgba(${item.capGlow},${0.4 + glow * 0.4})`;
 
-    const g = ctx.createLinearGradient(capX, 0, capX + capW, 0);
-    item.capColors.forEach(([pos, color]) => g.addColorStop(pos, color));
     ctx.fillStyle = g;
     ctx.strokeStyle = `rgba(${item.capGlow},${0.5 + glow * 0.4})`;
     ctx.lineWidth = 1.5;
@@ -54,16 +77,16 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: Pipe): void {
     switch (item.capStyle) {
       case 'rounded':
         ctx.beginPath();
-        ctx.roundRect(capX, y, capW, ch, 10);
+        ctx.roundRect(0, 0, capW, ch, 10);
         ctx.fill();
         ctx.stroke();
         break;
       case 'ringed-segments': {
         const segH = (ch - 4) / 3;
         for (let s = 0; s < 3; s++) {
-          const sy = y + s * (segH + 2);
+          const sy = s * (segH + 2);
           ctx.beginPath();
-          ctx.roundRect(capX, sy, capW, segH, 3);
+          ctx.roundRect(0, sy, capW, segH, 3);
           ctx.fill();
           ctx.stroke();
         }
@@ -71,15 +94,15 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: Pipe): void {
       }
       case 'crystal-spike': {
         ctx.beginPath();
-        ctx.rect(capX, y, capW, ch);
+        ctx.rect(0, 0, capW, ch);
         ctx.fill();
         ctx.stroke();
         const spikeCount = 5, spikeW = capW / spikeCount, spikeH = 8;
-        const spikeY = flip ? y : y + ch;
+        const spikeY = flip ? 0 : ch;
         const dir = flip ? -1 : 1;
         ctx.fillStyle = item.capColors[item.capColors.length - 1][1];
         for (let s = 0; s < spikeCount; s++) {
-          const sx = capX + s * spikeW;
+          const sx = s * spikeW;
           ctx.beginPath();
           ctx.moveTo(sx, spikeY);
           ctx.lineTo(sx + spikeW / 2, spikeY + dir * spikeH);
@@ -91,10 +114,10 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: Pipe): void {
       }
       case 'diamond-notch': {
         ctx.beginPath();
-        ctx.rect(capX, y, capW, ch);
+        ctx.rect(0, 0, capW, ch);
         ctx.fill();
         ctx.stroke();
-        const midX = capX + capW / 2, midY = y + ch / 2, dr = ch * 0.55;
+        const midX = capW / 2, midY = ch / 2, dr = ch * 0.55;
         ctx.fillStyle = item.stripeColor;
         ctx.beginPath();
         ctx.moveTo(midX, midY - dr);
@@ -107,21 +130,21 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: Pipe): void {
       }
       case 'hazard-stripe': {
         ctx.beginPath();
-        ctx.rect(capX, y, capW, ch);
+        ctx.rect(0, 0, capW, ch);
         ctx.fill();
         ctx.stroke();
         ctx.save();
         ctx.beginPath();
-        ctx.rect(capX, y, capW, ch);
+        ctx.rect(0, 0, capW, ch);
         ctx.clip();
         const stripeW = 10;
-        for (let sx = capX - ch; sx < capX + capW + ch; sx += stripeW * 2) {
+        for (let sx = -ch; sx < capW + ch; sx += stripeW * 2) {
           ctx.fillStyle = '#000';
           ctx.beginPath();
-          ctx.moveTo(sx, y);
-          ctx.lineTo(sx + stripeW, y);
-          ctx.lineTo(sx + stripeW - ch, y + ch);
-          ctx.lineTo(sx - ch, y + ch);
+          ctx.moveTo(sx, 0);
+          ctx.lineTo(sx + stripeW, 0);
+          ctx.lineTo(sx + stripeW - ch, ch);
+          ctx.lineTo(sx - ch, ch);
           ctx.closePath();
           ctx.fill();
         }
@@ -130,25 +153,25 @@ export function drawPipe(ctx: CanvasRenderingContext2D, p: Pipe): void {
       }
       default: // 'straight'
         ctx.beginPath();
-        ctx.rect(capX, y, capW, ch);
+        ctx.rect(0, 0, capW, ch);
         ctx.fill();
         ctx.stroke();
     }
 
     ctx.strokeStyle = `rgba(${item.edgeGlow},${0.6 + glow * 0.3})`;
     ctx.lineWidth = 1;
-    const edgeY = flip ? y : y + ch;
+    const edgeY = flip ? 0 : ch;
     ctx.beginPath();
-    ctx.moveTo(capX, edgeY);
-    ctx.lineTo(capX + capW, edgeY);
+    ctx.moveTo(0, edgeY);
+    ctx.lineTo(capW, edgeY);
     ctx.stroke();
     ctx.restore();
   }
 
-  drawBarrel(p.x, 0, PIPE_W, p.topH);
-  drawCap(p.x, p.topH - capH, capH, false);
-  drawBarrel(p.x, botY, PIPE_W, H - botY);
-  drawCap(p.x, botY, capH, true);
+  drawBarrel(x, 0, PIPE_W, p.topH);
+  drawCap(x, p.topH - capH, capH, false);
+  drawBarrel(x, botY, PIPE_W, H - botY);
+  drawCap(x, botY, capH, true);
   ctx.restore();
 }
 

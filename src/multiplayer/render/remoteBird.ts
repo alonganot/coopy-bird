@@ -2,6 +2,7 @@ import { drawBird } from '../../game/render/bird';
 import { SHOP_GLASSES, SHOP_HATS, SHOP_MASKS, SHOP_SHOES } from '../../game/shop/data';
 import type { SnapshotPlayer } from '../../../server/protocol';
 import { PLAYER_X } from '../mpState';
+import { getSmoothedY } from './remoteSmoothing';
 
 const BIRD_R = 18;
 
@@ -28,14 +29,19 @@ function drawCloneMarker(ctx: CanvasRenderingContext2D, x: number, y: number, co
   ctx.restore();
 }
 
-export function drawRemotePlayer(ctx: CanvasRenderingContext2D, p: SnapshotPlayer, tick: number, isYou: boolean): void {
+export function drawRemotePlayer(ctx: CanvasRenderingContext2D, p: SnapshotPlayer, tick: number, isYou: boolean, dtMs: number): void {
   if (p.clone?.alive) drawCloneMarker(ctx, PLAYER_X, p.clone.y, p.color);
   if (!p.alive) return; // dead-and-awaiting-respawn players are simply hidden; roster shows their status
+
+  // Smooth away network jitter for remote players only — the local player's own bird
+  // keeps using the raw snapshot value, so this adds no extra input-response lag on top
+  // of the already-existing round-trip latency for their own jump.
+  const renderY = isYou ? p.y : getSmoothedY(p.id, p.y, dtMs);
 
   const dashActive = (p.activeTimer.dash ?? 0) > 0;
   drawBird(ctx, {
     x: PLAYER_X,
-    y: p.y,
+    y: renderY,
     vy: p.vy,
     r: BIRD_R,
     thrustAnim: 0,
@@ -61,10 +67,10 @@ export function drawRemotePlayer(ctx: CanvasRenderingContext2D, p: SnapshotPlaye
     ctx.strokeStyle = p.levitating ? '#7fd8ff' : '#ffffff';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(PLAYER_X, p.y, BIRD_R + 6, 0, Math.PI * 2);
+    ctx.arc(PLAYER_X, renderY, BIRD_R + 6, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
   }
 
-  drawNametag(ctx, PLAYER_X, p.y, p.name, isYou);
+  drawNametag(ctx, PLAYER_X, renderY, p.name, isYou);
 }

@@ -76,8 +76,11 @@ function simulateTick(room: Room, now: number, callbacks: TickCallbacks): void {
 
   // 3. Spawn + 4. move/cull pipes
   if (!freezing && room.frame % 90 === 0) spawnPipe(room);
-  room.pipes.forEach(p => { p.x -= currentSpeed; });
-  room.pipes = room.pipes.filter(p => p.x + PIPE_W > 0);
+  for (let i = room.pipes.length - 1; i >= 0; i--) {
+    const p = room.pipes[i];
+    p.x -= currentSpeed;
+    if (p.x + PIPE_W <= 0) room.pipes.splice(i, 1);
+  }
 
   // 5. Per-player skill timers/effects (projectiles, earthquake sink, clone physics)
   alivePlayers.forEach(p => updateSkillsForPlayer(p, room, now));
@@ -110,7 +113,9 @@ function simulateTick(room: Room, now: number, callbacks: TickCallbacks): void {
       }
     }
   }
-  room.pipes = room.pipes.filter(p => !p.destroyed);
+  for (let i = room.pipes.length - 1; i >= 0; i--) {
+    if (room.pipes[i].destroyed) room.pipes.splice(i, 1);
+  }
 
   // 8. Floor/ceiling bounds
   for (const p of alivePlayers) {
