@@ -190,6 +190,25 @@ export function drawGlasses(ctx: CanvasRenderingContext2D, item: GlassesItem, r:
   ctx.restore();
 }
 
+/**
+ * Every mask style shares this base silhouette: a half-ellipse spanning the bird's
+ * entire width (rx=18, matching the body radius) covering the top half of the head
+ * only (from the crown down to just below eye height, flat edge at cy) — a proper
+ * "mask stretched across the whole top of the face" rather than a small shape
+ * floating over one side. Individual styles vary color/pattern/eye-slit treatment on
+ * top of this shared shape.
+ */
+function domePath(ctx: CanvasRenderingContext2D, cy = -2, ry = 13, rx = 18): void {
+  ctx.beginPath();
+  ctx.ellipse(0, cy, rx, ry, 0, Math.PI, Math.PI * 2);
+  ctx.closePath();
+}
+
+/**
+ * Drawn last in drawBird() (after the eye/glasses/beak, right before the hat — see
+ * bird.ts) so every style here can fully occlude/replace the eye rather than being
+ * painted over by it.
+ */
 export function drawMask(ctx: CanvasRenderingContext2D, item: MaskItem, r: number): void {
   ctx.save();
   ctx.scale(r / 18, r / 18);
@@ -199,68 +218,263 @@ export function drawMask(ctx: CanvasRenderingContext2D, item: MaskItem, r: numbe
 
   switch (item.style) {
     case 'bandit':
+      // Angled domino band centered on the eye (8,-5), piped edge, small ear straps.
+      ctx.save();
+      ctx.translate(8, -5);
+      ctx.rotate(-0.15);
       ctx.beginPath();
-      ctx.roundRect(-2, -9, 18, 8, 3);
+      ctx.roundRect(-9, -6, 20, 11, 4);
       ctx.fill();
-      break;
-    case 'ninja':
-      ctx.beginPath();
-      ctx.roundRect(-3, -10, 20, 16, 3);
-      ctx.fill();
-      break;
-    case 'hero':
-      ctx.beginPath();
-      ctx.ellipse(8, -6, 9, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.lineWidth = 1.4;
       ctx.strokeStyle = item.accent;
       ctx.stroke();
-      break;
-    case 'robot':
       ctx.beginPath();
-      ctx.roundRect(-1, -9, 17, 9, 2);
-      ctx.fill();
+      ctx.arc(0, 0, 1.3, 0, Math.PI * 2);
       ctx.fillStyle = item.accent;
-      ctx.fillRect(3, -6, 9, 3);
-      break;
-    case 'skull':
-      ctx.beginPath();
-      ctx.ellipse(6, -5, 11, 10, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = item.primary;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-1, -9);
+      ctx.lineTo(-14, -11);
+      ctx.moveTo(-1, -2);
+      ctx.lineTo(-13, 1);
+      ctx.stroke();
+      break;
+
+    case 'carnival': {
+      // Jester full-width dome: diamond checker pattern, punched eye cutouts, dangling bell.
+      domePath(ctx, -2, 13);
+      ctx.fill();
+      ctx.save();
+      ctx.clip();
+      ctx.fillStyle = item.accent;
+      for (let row = -15; row < -2; row += 7) {
+        for (let col = -18; col < 18; col += 7) {
+          if (Math.round((row + col) / 7) % 2 === 0) {
+            ctx.save();
+            ctx.translate(col, row);
+            ctx.rotate(Math.PI / 4);
+            ctx.fillRect(-3.2, -3.2, 6.4, 6.4);
+            ctx.restore();
+          }
+        }
+      }
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.beginPath();
+      ctx.ellipse(8, -6, 3.4, 2.2, -0.2, 0, Math.PI * 2);
+      ctx.ellipse(-6, -6, 3.4, 2.2, 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
       ctx.fillStyle = item.accent;
       ctx.beginPath();
-      ctx.arc(2, -6, 2, 0, Math.PI * 2);
-      ctx.arc(11, -6, 2, 0, Math.PI * 2);
+      ctx.arc(16, -14, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(16, -11, 0.9, 0, Math.PI * 2);
       ctx.fill();
       break;
-    case 'plague':
+    }
+
+    case 'ninja': {
+      // Full face wrap: dark cloth ellipse, glowing eye-slit band, fold lines, trailing tail.
       ctx.beginPath();
-      ctx.ellipse(4, -4, 8, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(9, -3, 17, 12, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(20, -2, 5, 3, -0.1, 0, Math.PI * 2);
-      ctx.fill();
-      break;
-    case 'carnival':
-      ctx.beginPath();
-      ctx.ellipse(6, -6, 10, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.save();
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = item.accent;
       ctx.fillStyle = item.accent;
       ctx.beginPath();
-      ctx.moveTo(16, -10);
-      ctx.lineTo(24, -14);
-      ctx.lineTo(22, -6);
+      ctx.roundRect(0, -7, 18, 4, 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-4, 2);
+      ctx.lineTo(20, 4);
+      ctx.moveTo(-3, 6);
+      ctx.lineTo(18, 8);
+      ctx.stroke();
+      ctx.fillStyle = item.primary;
+      ctx.beginPath();
+      ctx.moveTo(-8, -6);
+      ctx.lineTo(-18, -10);
+      ctx.lineTo(-16, -2);
       ctx.closePath();
       ctx.fill();
       break;
-    case 'tribal':
+    }
+
+    case 'tribal': {
+      // Carved wood mask: angular full-width polygon, diamond eye cutout, ceremonial accents.
       ctx.beginPath();
-      ctx.moveTo(-2, -9);
-      ctx.lineTo(16, -9);
-      ctx.lineTo(10, -1);
-      ctx.lineTo(4, -1);
+      ctx.moveTo(-17, -8);
+      ctx.lineTo(-6, -15);
+      ctx.lineTo(8, -16);
+      ctx.lineTo(18, -12);
+      ctx.lineTo(17, -2);
+      ctx.lineTo(0, 3);
+      ctx.lineTo(-17, -2);
       ctx.closePath();
       ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
+      ctx.beginPath();
+      ctx.moveTo(3, -9);
+      ctx.lineTo(8, -5);
+      ctx.lineTo(3, -1);
+      ctx.lineTo(-2, -5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = item.accent;
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(-14, -8);
+      ctx.lineTo(-8, -11);
+      ctx.moveTo(10, -3);
+      ctx.lineTo(15, -6);
+      ctx.stroke();
+      ctx.fillStyle = item.accent;
+      [[13, -11], [-12, -4], [12, 0]].forEach(([dx, dy]) => {
+        ctx.beginPath();
+        ctx.arc(dx, dy, 1.3, 0, Math.PI * 2);
+        ctx.fill();
+      });
       break;
+    }
+
+    case 'hero': {
+      // Full cowl: pointed ear-tip silhouette over the whole head/face, gold eye + trim.
+      ctx.beginPath();
+      ctx.moveTo(-6, -4);
+      ctx.quadraticCurveTo(-8, -18, 2, -22);
+      ctx.lineTo(0, -14);
+      ctx.quadraticCurveTo(6, -20, 12, -14);
+      ctx.lineTo(10, -20);
+      ctx.quadraticCurveTo(20, -16, 22, -4);
+      ctx.quadraticCurveTo(24, 6, 14, 9);
+      ctx.lineTo(-2, 6);
+      ctx.quadraticCurveTo(-8, 4, -6, -4);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = item.accent;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.ellipse(8, -5, 8, 6, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-6, -4);
+      ctx.quadraticCurveTo(-8, -18, 2, -22);
+      ctx.stroke();
+      break;
+    }
+
+    case 'plague': {
+      // Full beak mask: face plate + extended curved beak, round goggle lens.
+      ctx.beginPath();
+      ctx.ellipse(6, -4, 13, 11, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(14, -4);
+      ctx.quadraticCurveTo(30, -8, 38, -2);
+      ctx.quadraticCurveTo(30, 4, 14, 2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = item.accent;
+      ctx.beginPath();
+      ctx.arc(7, -5, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = item.primary;
+      ctx.beginPath();
+      ctx.arc(7, -5, 3.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = item.accent;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(7, -5, 6, 0, Math.PI * 2);
+      ctx.stroke();
+      break;
+    }
+
+    case 'robot': {
+      // Full-width angular face plate, panel seams, glowing eye slit, vents, rivets.
+      ctx.beginPath();
+      ctx.moveTo(-18, -6);
+      ctx.lineTo(-14, -14);
+      ctx.lineTo(14, -14);
+      ctx.lineTo(18, -6);
+      ctx.lineTo(16, 1);
+      ctx.lineTo(-16, 1);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-8, -14);
+      ctx.lineTo(-9, 1);
+      ctx.moveTo(8, -14);
+      ctx.lineTo(9, 1);
+      ctx.stroke();
+      ctx.save();
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = item.accent;
+      ctx.fillStyle = item.accent;
+      ctx.beginPath();
+      ctx.roundRect(-13, -8, 26, 4, 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.roundRect(10 + i * 3, -4, 2, 4, 1);
+        ctx.fill();
+      }
+      ctx.fillStyle = item.accent;
+      [[-15, -9], [15, -9], [-14, -1], [14, -1]].forEach(([dx, dy]) => {
+        ctx.beginPath();
+        ctx.arc(dx, dy, 1, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      break;
+    }
+
+    case 'skull': {
+      // Glowing ember skull: full skull + jaw, teeth, glowing ember sockets, crack highlights.
+      ctx.beginPath();
+      ctx.ellipse(8, -3, 14, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-2, 4);
+      ctx.lineTo(18, 4);
+      ctx.lineTo(15, 11);
+      ctx.lineTo(1, 11);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = item.accent;
+      for (let i = 0; i < 4; i++) {
+        ctx.fillRect(i * 4.5, 4, 3, 4);
+      }
+      ctx.save();
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#ff6b1a';
+      ctx.fillStyle = '#ff5e1a';
+      ctx.beginPath();
+      ctx.arc(3, -6, 3.2, 0, Math.PI * 2);
+      ctx.arc(13, -6, 3.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255,140,66,0.6)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.moveTo(8, -14);
+      ctx.lineTo(6, -2);
+      ctx.moveTo(14, -8);
+      ctx.lineTo(18, -2);
+      ctx.stroke();
+      break;
+    }
   }
   ctx.restore();
 }
