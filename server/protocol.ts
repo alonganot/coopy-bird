@@ -67,7 +67,11 @@ export type ServerMessage =
       you: string;
       leaderboard?: LeaderboardEntry[];
     }
-  | { type: 'leaderboard'; entries: LeaderboardEntry[] };
+  | { type: 'leaderboard'; entries: LeaderboardEntry[] }
+  // Sent to each player individually once, right as their match ends — see `onMatchEnd` in
+  // server/index.ts. `totalCoins` is the player's authoritative new balance (server-computed,
+  // not a client-side guess), so the client can fold it into its own gameData in place.
+  | { type: 'coinsAwarded'; amount: number; totalCoins: number };
 
 // Matches single-player's ~60Hz requestAnimationFrame-driven physics step — both apply
 // fixed per-step increments (gravity, pipe speed, spawn cadence in ticks) rather than

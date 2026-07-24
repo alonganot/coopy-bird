@@ -1,4 +1,5 @@
 import type { LeaderboardEntry, RoomPhase, ServerMessage, SnapshotPlayer } from '../../server/protocol';
+import { world } from '../game/state';
 import type { Pipe } from '../game/types';
 
 /** Every player's bird sits at this fixed x, matching the server's authoritative simulation. */
@@ -13,6 +14,8 @@ export interface MpState {
   players: SnapshotPlayer[];
   leaderboard: LeaderboardEntry[] | null;
   tick: number;
+  /** Coins earned from the just-finished match, for the match-ended overlay; null once a new round starts. */
+  lastCoinsAwarded: number | null;
 }
 
 export const mpState: MpState = {
@@ -24,6 +27,7 @@ export const mpState: MpState = {
   players: [],
   leaderboard: null,
   tick: 0,
+  lastCoinsAwarded: null,
 };
 
 export function resetMpState(): void {
@@ -34,6 +38,7 @@ export function resetMpState(): void {
   mpState.pipes = [];
   mpState.players = [];
   mpState.leaderboard = null;
+  mpState.lastCoinsAwarded = null;
 }
 
 export function applyServerMessage(msg: ServerMessage): void {
@@ -49,9 +54,16 @@ export function applyServerMessage(msg: ServerMessage): void {
       mpState.players = msg.players;
       mpState.you = msg.you;
       if (msg.leaderboard) mpState.leaderboard = msg.leaderboard;
+      if (msg.phase !== 'ended') mpState.lastCoinsAwarded = null;
       break;
     case 'leaderboard':
       mpState.leaderboard = msg.entries;
+      break;
+    case 'coinsAwarded':
+      mpState.lastCoinsAwarded = msg.amount;
+      // Server is authoritative for the new balance — fold it straight into gameData so a
+      // later single-player saveData() push doesn't clobber the award with a stale blob.
+      world.gameData.totalCoins = msg.totalCoins;
       break;
   }
 }

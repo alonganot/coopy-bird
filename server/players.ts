@@ -25,6 +25,23 @@ export async function savePlayerData(username: string, gameData: GameData): Prom
   );
 }
 
+/**
+ * Atomically increments `totalCoins` against whatever is currently stored, rather than a
+ * read-modify-write in JS — safe against a concurrent full-blob `savePlayerData` write (e.g.
+ * a client's own `pushGameData` firing around the same time) clobbering the award.
+ */
+export async function awardCoins(username: string, amount: number): Promise<number> {
+  const result = await pool.query<{ total: number }>(
+    `UPDATE players
+     SET game_data = jsonb_set(game_data, '{totalCoins}', to_jsonb(COALESCE((game_data->>'totalCoins')::int, 0) + $2::int)),
+         updated_at = now()
+     WHERE username = $1
+     RETURNING (game_data->>'totalCoins')::int AS total`,
+    [username, amount],
+  );
+  return result.rows[0]?.total ?? 0;
+}
+
 export async function usernameExists(username: string): Promise<boolean> {
   const result = await pool.query('SELECT 1 FROM players WHERE username = $1', [username]);
   return (result.rowCount ?? 0) > 0;
