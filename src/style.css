@@ -28,6 +28,22 @@ canvas {
   box-shadow: 0 0 40px #00f7ff55, 0 0 80px #00f7ff22;
 }
 
+/* Most phone screens are taller/narrower than the game's fixed 400x600 shape, so the
+   contain-fit sizing above letterboxes with black bars top and bottom. Below that
+   threshold, stretch to fill the screen exactly instead — the canvas's backing store
+   stays a fixed 400x600 (see engine.ts/mpEngine.ts), so this non-uniform CSS scale does
+   visually squish circles/pipes slightly, but input mapping (toCanvasCoords in
+   input.ts/mpInput.ts) already scales X/Y independently, so click/touch targeting stays
+   correct either way. */
+@media (max-aspect-ratio: 2/3) {
+  canvas,
+  .username-gate {
+    width: 100vw;
+    height: 100dvh;
+    aspect-ratio: auto;
+  }
+}
+
 .skill-buttons {
   position: absolute;
   left: 0;

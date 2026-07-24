@@ -113,7 +113,6 @@ export function drawBird(ctx: CanvasRenderingContext2D, p: BirdRenderParams): vo
   ctx.restore();
 
   if (p.props?.shoe) drawShoes(ctx, p.props.shoe, p.r);
-  if (p.props?.mask) drawMask(ctx, p.props.mask, p.r);
 
   ctx.fillStyle = col.wing;
   ctx.beginPath();
@@ -167,6 +166,7 @@ export function drawBird(ctx: CanvasRenderingContext2D, p: BirdRenderParams): vo
   ctx.closePath();
   ctx.fill();
 
+  if (p.props?.mask) drawMask(ctx, p.props.mask, p.r);
   if (p.props?.hat) drawHat(ctx, p.props.hat, p.r);
 
   ctx.restore();
