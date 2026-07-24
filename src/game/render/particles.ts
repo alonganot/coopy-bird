@@ -1,24 +1,34 @@
 import type { Particle, Projectile } from '../types';
 
+// The coin icon's color stops only depend on its radius (a small, fixed set of values
+// across all call sites — HUD icon + shop price icons) — cached by radius, drawn in
+// local coordinates and positioned via ctx.translate so the cache is position-independent.
+const coinGradCache = new Map<number, CanvasGradient>();
+
 export function drawCoin(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, alpha: number): void {
   ctx.save();
+  ctx.translate(x, y);
   ctx.globalAlpha = alpha;
   ctx.shadowBlur = 8;
   ctx.shadowColor = '#f9ca2488';
-  const cg = ctx.createRadialGradient(x - r * 0.2, y - r * 0.2, r * 0.1, x, y, r);
-  cg.addColorStop(0, '#fff7a0');
-  cg.addColorStop(0.5, '#f9ca24');
-  cg.addColorStop(1, '#b8860b');
+  let cg = coinGradCache.get(r);
+  if (!cg) {
+    cg = ctx.createRadialGradient(-r * 0.2, -r * 0.2, r * 0.1, 0, 0, r);
+    cg.addColorStop(0, '#fff7a0');
+    cg.addColorStop(0.5, '#f9ca24');
+    cg.addColorStop(1, '#b8860b');
+    coinGradCache.set(r, cg);
+  }
   ctx.fillStyle = cg;
   ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.arc(0, 0, r, 0, Math.PI * 2);
   ctx.fill();
   ctx.strokeStyle = '#e6b80088';
   ctx.lineWidth = 1;
   ctx.stroke();
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.beginPath();
-  ctx.arc(x - r * 0.25, y - r * 0.28, r * 0.32, 0, Math.PI * 2);
+  ctx.arc(-r * 0.25, -r * 0.28, r * 0.32, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }

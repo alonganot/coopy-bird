@@ -19,8 +19,13 @@ export function spawnPipe(): void {
 }
 
 export function update(): void {
-  world.particles.forEach(p => { p.x += p.vx || 0; p.y += p.vy || 0; p.life -= 0.03; });
-  world.particles = world.particles.filter(p => p.life > 0);
+  for (let i = world.particles.length - 1; i >= 0; i--) {
+    const p = world.particles[i];
+    p.x += p.vx || 0;
+    p.y += p.vy || 0;
+    p.life -= 0.03;
+    if (p.life <= 0) world.particles.splice(i, 1);
+  }
   if (world.state !== 'play') return;
 
   const dashing = isSkillActive('dash');
@@ -38,8 +43,11 @@ export function update(): void {
 
   const currentSpeed = freezing ? 0 : (dashing ? SPEED * DASH_SPEED_MULTIPLIER : SPEED) * timeSlow;
   if (!freezing && world.frame % 90 === 0) spawnPipe();
-  world.pipes.forEach(p => { p.x -= currentSpeed; });
-  world.pipes = world.pipes.filter(p => p.x + PIPE_W > 0);
+  for (let i = world.pipes.length - 1; i >= 0; i--) {
+    const p = world.pipes[i];
+    p.x -= currentSpeed;
+    if (p.x + PIPE_W <= 0) world.pipes.splice(i, 1);
+  }
 
   updateSkills();
 
@@ -61,7 +69,9 @@ export function update(): void {
       }
     }
   });
-  world.pipes = world.pipes.filter(p => !p.destroyed);
+  for (let i = world.pipes.length - 1; i >= 0; i--) {
+    if (world.pipes[i].destroyed) world.pipes.splice(i, 1);
+  }
 
   if (world.bird.y + world.bird.r > H - 50 || world.bird.y - world.bird.r < 0) attemptDeath();
   world.frame++;

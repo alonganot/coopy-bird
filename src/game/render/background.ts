@@ -1,19 +1,36 @@
 import { H, SPEED, W } from '../constants';
 import { getActiveBackgroundItem } from '../shop/data';
+import type { BackgroundItem } from '../shop/types';
 import { world } from '../state';
+
+// Gradient inputs (theme colors, fixed canvas dimensions) are static for the lifetime of
+// a given equipped theme — getActiveBackgroundItem() always returns the same stable
+// object reference from SHOP_BACKGROUNDS, so a WeakMap keyed on the theme itself needs
+// no invalidation logic: switching themes just looks up (or lazily builds) a different entry.
+const skyGradCache = new WeakMap<BackgroundItem, CanvasGradient>();
+const glowGradCache = new WeakMap<BackgroundItem, CanvasGradient>();
+const floorGradCache = new WeakMap<BackgroundItem, CanvasGradient>();
 
 export function drawBg(ctx: CanvasRenderingContext2D): void {
   const theme = getActiveBackgroundItem(world.gameData);
-  const sky = ctx.createLinearGradient(0, 0, 0, H);
-  theme.sky.forEach(([pos, color]) => sky.addColorStop(pos, color));
+  let sky = skyGradCache.get(theme);
+  if (!sky) {
+    sky = ctx.createLinearGradient(0, 0, 0, H);
+    theme.sky.forEach(([pos, color]) => sky!.addColorStop(pos, color));
+    skyGradCache.set(theme, sky);
+  }
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, W, H);
 
   if (theme.glowAccent) {
     const ga = theme.glowAccent;
-    const gg = ctx.createRadialGradient(ga.x, ga.y, 0, ga.x, ga.y, ga.r);
-    gg.addColorStop(0, ga.color);
-    gg.addColorStop(1, 'transparent');
+    let gg = glowGradCache.get(theme);
+    if (!gg) {
+      gg = ctx.createRadialGradient(ga.x, ga.y, 0, ga.x, ga.y, ga.r);
+      gg.addColorStop(0, ga.color);
+      gg.addColorStop(1, 'transparent');
+      glowGradCache.set(theme, gg);
+    }
     ctx.save();
     ctx.fillStyle = gg;
     ctx.fillRect(0, 0, W, H);
@@ -116,9 +133,13 @@ export function drawBg(ctx: CanvasRenderingContext2D): void {
   }
   ctx.restore();
 
-  const floorGrad = ctx.createLinearGradient(0, floorY, 0, H);
-  floorGrad.addColorStop(0, theme.floor.top);
-  floorGrad.addColorStop(1, theme.floor.bottom);
+  let floorGrad = floorGradCache.get(theme);
+  if (!floorGrad) {
+    floorGrad = ctx.createLinearGradient(0, floorY, 0, H);
+    floorGrad.addColorStop(0, theme.floor.top);
+    floorGrad.addColorStop(1, theme.floor.bottom);
+    floorGradCache.set(theme, floorGrad);
+  }
   ctx.fillStyle = floorGrad;
   ctx.fillRect(0, floorY, W, H - floorY);
 

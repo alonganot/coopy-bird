@@ -32,6 +32,14 @@ export interface BirdRenderParams {
   props?: BirdProps;
 }
 
+// Sheen and dash-streak gradients depend only on the bird radius (always 18 in practice,
+// both single-player's state.ts and multiplayer's remoteBird.ts BIRD_R), not on position
+// or color — cached lazily and rebuilt only if r ever changes, cheap insurance either way.
+let sheenGradCache: CanvasGradient | null = null;
+let sheenGradR = -1;
+let dashStreakGradCache: CanvasGradient | null = null;
+let dashStreakGradR = -1;
+
 export function drawBird(ctx: CanvasRenderingContext2D, p: BirdRenderParams): void {
   const col = p.color;
   ctx.save();
@@ -72,10 +80,13 @@ export function drawBird(ctx: CanvasRenderingContext2D, p: BirdRenderParams): vo
     // Full-width horizontal streak
     ctx.save();
     ctx.globalAlpha = 0.25 * progress;
-    const sg = ctx.createLinearGradient(-p.r - 80, 0, -p.r, 0);
-    sg.addColorStop(0, 'transparent');
-    sg.addColorStop(1, '#00f7ffcc');
-    ctx.fillStyle = sg;
+    if (!dashStreakGradCache || dashStreakGradR !== p.r) {
+      dashStreakGradCache = ctx.createLinearGradient(-p.r - 80, 0, -p.r, 0);
+      dashStreakGradCache.addColorStop(0, 'transparent');
+      dashStreakGradCache.addColorStop(1, '#00f7ffcc');
+      dashStreakGradR = p.r;
+    }
+    ctx.fillStyle = dashStreakGradCache;
     ctx.fillRect(-p.r - 80, -5, 80, 10);
     ctx.restore();
   }
@@ -89,10 +100,13 @@ export function drawBird(ctx: CanvasRenderingContext2D, p: BirdRenderParams): vo
   ctx.beginPath();
   ctx.ellipse(0, 0, p.r, p.r - 3, 0, 0, Math.PI * 2);
   ctx.fill();
-  const sheen = ctx.createRadialGradient(-4, -6, 1, 0, 0, p.r);
-  sheen.addColorStop(0, 'rgba(255,255,255,0.35)');
-  sheen.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = sheen;
+  if (!sheenGradCache || sheenGradR !== p.r) {
+    sheenGradCache = ctx.createRadialGradient(-4, -6, 1, 0, 0, p.r);
+    sheenGradCache.addColorStop(0, 'rgba(255,255,255,0.35)');
+    sheenGradCache.addColorStop(1, 'rgba(255,255,255,0)');
+    sheenGradR = p.r;
+  }
+  ctx.fillStyle = sheenGradCache;
   ctx.beginPath();
   ctx.ellipse(0, 0, p.r, p.r - 3, 0, 0, Math.PI * 2);
   ctx.fill();

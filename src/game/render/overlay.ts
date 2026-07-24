@@ -4,6 +4,9 @@ import { SHOP_SKILLS } from '../skills/data';
 import { world } from '../state';
 import { neonPanel } from './panel';
 
+// Fully static — depends only on the fixed W/H constants — so it's cached once, lazily.
+let vignetteGradCache: CanvasGradient | null = null;
+
 export function drawOverlay(ctx: CanvasRenderingContext2D): void {
   if (world.state === 'idle') {
     neonPanel(ctx, 36, H / 2 - 100, W - 72, 210, 12);
@@ -49,10 +52,12 @@ export function drawOverlay(ctx: CanvasRenderingContext2D): void {
   } else if (world.state === 'dead') {
     const panelH = 60 + Math.max(world.leaderboard.length, 1) * 28 + 80;
     const panelY = H / 2 - panelH / 2;
-    const vig = ctx.createRadialGradient(W / 2, H / 2, H * 0.15, W / 2, H / 2, H * 0.75);
-    vig.addColorStop(0, 'transparent');
-    vig.addColorStop(1, 'rgba(200,0,30,0.22)');
-    ctx.fillStyle = vig;
+    if (!vignetteGradCache) {
+      vignetteGradCache = ctx.createRadialGradient(W / 2, H / 2, H * 0.15, W / 2, H / 2, H * 0.75);
+      vignetteGradCache.addColorStop(0, 'transparent');
+      vignetteGradCache.addColorStop(1, 'rgba(200,0,30,0.22)');
+    }
+    ctx.fillStyle = vignetteGradCache;
     ctx.fillRect(0, 0, W, H);
     neonPanel(ctx, 36, panelY, W - 72, panelH, 12, '#ff4466');
 

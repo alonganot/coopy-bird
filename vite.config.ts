@@ -8,6 +8,10 @@ export default defineConfig({
     VitePWA({
       // New builds silently take over on next load — no manual "update available" prompt to build.
       registerType: 'autoUpdate',
+      // Registration is done manually in App.tsx via `virtual:pwa-register/react`'s useRegisterSW,
+      // so it can force a reload once the new service worker takes over (see App.tsx) — the
+      // default auto-injected registerSW.js has no way to hook that in.
+      injectRegister: false,
       // Not enabled in dev: a caching service worker fighting Vite's hot-reload is a well-known
       // source of confusing dev bugs, so it only runs in production builds/preview/deployed.
       includeAssets: ['favicon.ico', 'apple-touch-icon-180x180.png', 'icon-source.svg'],

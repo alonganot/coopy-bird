@@ -35,7 +35,15 @@ export function createGame(canvas: HTMLCanvasElement, controlsContainer?: HTMLEl
   let modeSwitch: ReturnType<typeof attachModeSwitch> | null = null;
   let settingsInput: ReturnType<typeof attachSettingsInput> | null = null;
 
-  function loop() {
+  // update() advances game time by a fixed amount per call, so it must run at a fixed
+  // real-time rate rather than once per rendered frame — otherwise a frame-rate drop
+  // (heavy tab, slow device) would also slow down gameplay itself, not just visuals.
+  const FIXED_DT_MS = 1000 / 60;
+  const MAX_UPDATES_PER_FRAME = 5; // avoids a catch-up burst after e.g. a backgrounded tab
+  let lastFrameTime: number | null = null;
+  let accumulator = 0;
+
+  function loop(timestamp: number) {
     world.tick++;
     if (world.state === 'idle' && !world.shopState && !world.settingsState) {
       if (--world.glitchTimer <= 0) {
@@ -82,7 +90,17 @@ export function createGame(canvas: HTMLCanvasElement, controlsContainer?: HTMLEl
     if (world.shopState === 'shop') drawShop(ctx);
     if (world.settingsState === 'settings') drawSettingsPanel(ctx);
     drawScanlines(ctx);
-    update();
+
+    if (lastFrameTime === null) lastFrameTime = timestamp;
+    accumulator += Math.min(timestamp - lastFrameTime, 250);
+    lastFrameTime = timestamp;
+    let updates = 0;
+    while (accumulator >= FIXED_DT_MS && updates < MAX_UPDATES_PER_FRAME) {
+      update();
+      accumulator -= FIXED_DT_MS;
+      updates++;
+    }
+
     skillButtons?.sync();
     modeSwitch?.sync();
     settingsInput?.sync();
@@ -93,6 +111,8 @@ export function createGame(canvas: HTMLCanvasElement, controlsContainer?: HTMLEl
   return {
     start(): void {
       init();
+      lastFrameTime = null;
+      accumulator = 0;
       detachInput = attachInput(canvas);
       if (controlsContainer) {
         skillButtons = attachSkillButtons(controlsContainer, {
