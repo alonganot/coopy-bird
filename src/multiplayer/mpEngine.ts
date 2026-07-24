@@ -5,6 +5,7 @@ import { drawBg } from '../game/render/background';
 import { drawScanlines } from '../game/render/overlay';
 import { drawPipe } from '../game/render/pipe';
 import { getActiveColorItem, getActiveGlassesItem, getActiveHatItem, getActiveMaskItem, getActiveShoeItem } from '../game/shop/data';
+import { SHOP_SKILLS } from '../game/skills/data';
 import { world } from '../game/state';
 import { connect, type Connection } from './connection';
 import { applyServerMessage, mpState, resetMpState, you } from './mpState';
@@ -93,9 +94,10 @@ export function createMultiplayerGame(
             if (!me || mpState.phase !== 'playing') return null;
             const id = me.equippedOrder[slot];
             if (!id) return null;
+            const skill = SHOP_SKILLS.find(s => s.id === id)!;
             const active = (me.activeTimer[id] ?? 0) > 0;
             const charges = me.charges[id] ?? 0;
-            return { label: id, color: '#00f7ff', empty: !active && charges <= 0 };
+            return { label: skill.label, color: skill.color, empty: !active && charges <= 0 };
           },
         });
         if (options?.onSwitchMode) {

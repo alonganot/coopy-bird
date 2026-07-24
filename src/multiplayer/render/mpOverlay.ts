@@ -9,7 +9,8 @@ export function drawMpOverlay(ctx: CanvasRenderingContext2D): void {
   ctx.restore();
 
   const entries = (mpState.leaderboard ?? []).slice(0, 10);
-  const panelH = 140 + Math.max(entries.length, 1) * 24;
+  const coinsRowH = mpState.lastCoinsAwarded !== null ? 20 : 0;
+  const panelH = 140 + coinsRowH + Math.max(entries.length, 1) * 24;
   const panelY = H / 2 - panelH / 2;
 
   neonPanel(ctx, 36, panelY, W - 72, panelH, 12, '#ff4466');
@@ -30,15 +31,24 @@ export function drawMpOverlay(ctx: CanvasRenderingContext2D): void {
   ctx.fillText(`SHARED SCORE: ${mpState.score}`, W / 2, panelY + 62);
   ctx.restore();
 
+  if (mpState.lastCoinsAwarded !== null) {
+    ctx.save();
+    ctx.fillStyle = '#ffe066';
+    ctx.font = 'bold 14px "Courier New"';
+    ctx.textAlign = 'center';
+    ctx.fillText(`+${mpState.lastCoinsAwarded} COINS`, W / 2, panelY + 80);
+    ctx.restore();
+  }
+
   ctx.save();
   ctx.fillStyle = '#7ecfff';
   ctx.font = 'bold 12px "Courier New"';
   ctx.textAlign = 'center';
-  ctx.fillText('LEADERBOARD', W / 2, panelY + 84);
+  ctx.fillText('LEADERBOARD', W / 2, panelY + 84 + coinsRowH);
   ctx.restore();
 
   entries.forEach((e, i) => {
-    const y = panelY + 106 + i * 24;
+    const y = panelY + 106 + coinsRowH + i * 24;
     ctx.save();
     if (i === 0) { ctx.shadowBlur = 8; ctx.shadowColor = '#f9ca24'; }
     ctx.fillStyle = i === 0 ? '#f9ca24' : '#7ecfff99';

@@ -8,6 +8,7 @@ import { handleHttp } from './http';
 import { submitScore, topLeaderboard } from './leaderboard';
 import type { ClientMessage, LeaderboardEntry, ServerMessage, SnapshotPlayer } from './protocol';
 import { TICK_MS } from './protocol';
+import { awardCoins } from './players';
 import { createPlayer, createRoom, type Room, type ServerPlayer } from './room';
 import { activateSkill, mirrorCloneJump, startHover, stopHover } from './skills';
 import { stepRoom } from './tick';
@@ -50,7 +51,7 @@ function broadcastSnapshot(leaderboard?: LeaderboardEntry[]): void {
   const base = {
     type: 'snapshot' as const,
     phase: room.phase,
-    countdownEndsAt: room.countdownEndsAt,
+    countdownInMs: room.countdownEndsAt !== null ? Math.max(0, room.countdownEndsAt - now) : null,
     score: room.score,
     pipes: room.pipes,
     players,
@@ -66,9 +67,15 @@ function broadcastSnapshot(leaderboard?: LeaderboardEntry[]): void {
 function onMatchEnd(finishedRoom: Room): void {
   // p.name is always the account username now (see the 'join' handler below) — a stable,
   // real per-player key, unlike the free-text lobby nickname this used to be.
+  const coins = finishedRoom.score; // shared score — same reward every connected player earns
   finishedRoom.players.forEach(p => {
     submitScore(p.name, 'multiplayer', finishedRoom.score)
       .catch(err => console.error('Failed to persist leaderboard score:', err));
+    if (coins > 0) {
+      awardCoins(p.name, coins)
+        .then(totalCoins => send(p.ws, { type: 'coinsAwarded', amount: coins, totalCoins }))
+        .catch(err => console.error('Failed to award multiplayer coins:', err));
+    }
   });
 }
 

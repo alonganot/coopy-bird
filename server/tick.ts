@@ -25,12 +25,19 @@ function startCountdown(room: Room, now: number): void {
   room.countdownEndsAt = now + READY_COUNTDOWN_MS;
 }
 
-function startPlaying(room: Room): void {
+function startPlaying(room: Room, now: number): void {
   room.phase = 'playing';
   room.frame = 0;
   room.score = 0;
   room.pipes = [];
-  room.players.forEach(p => resetPlayerForMatch(p, 0));
+  room.players.forEach(p => {
+    resetPlayerForMatch(p, 0);
+    // Same grace period as a mid-match respawn (see the respawn-processing step below) —
+    // without it, gravity applies from frame 0 and a player who hasn't reacted to the
+    // countdown ending yet falls into the floor before they can even flap.
+    p.invulnerableUntil = now + INVULNERABILITY_MS;
+    p.levitatingUntil = now + LEVITATE_GRACE_MS;
+  });
 }
 
 function spawnPipe(room: Room): void {
@@ -164,7 +171,7 @@ export function stepRoom(room: Room, now: number, callbacks: TickCallbacks): voi
       if (allReady(room)) startCountdown(room, now);
       break;
     case 'countdown':
-      if (room.countdownEndsAt !== null && now >= room.countdownEndsAt) startPlaying(room);
+      if (room.countdownEndsAt !== null && now >= room.countdownEndsAt) startPlaying(room, now);
       break;
     case 'playing':
       simulateTick(room, now, callbacks);
