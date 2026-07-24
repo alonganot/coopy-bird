@@ -64,8 +64,8 @@ export function drawLobby(ctx: CanvasRenderingContext2D): void {
     ctx.restore();
   });
 
-  if (mpState.phase === 'countdown' && mpState.countdownEndsAt !== null) {
-    const secsLeft = Math.max(0, Math.ceil((mpState.countdownEndsAt - Date.now()) / 1000));
+  if (mpState.phase === 'countdown' && mpState.countdownInMs !== null) {
+    const secsLeft = Math.max(0, Math.ceil(mpState.countdownInMs / 1000));
     ctx.save();
     ctx.shadowBlur = 12;
     ctx.shadowColor = '#f9ca24';

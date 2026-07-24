@@ -51,7 +51,7 @@ function broadcastSnapshot(leaderboard?: LeaderboardEntry[]): void {
   const base = {
     type: 'snapshot' as const,
     phase: room.phase,
-    countdownEndsAt: room.countdownEndsAt,
+    countdownInMs: room.countdownEndsAt !== null ? Math.max(0, room.countdownEndsAt - now) : null,
     score: room.score,
     pipes: room.pipes,
     players,

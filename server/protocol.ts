@@ -60,7 +60,11 @@ export type ServerMessage =
   | {
       type: 'snapshot';
       phase: RoomPhase;
-      countdownEndsAt: number | null;
+      // Relative ms remaining, computed server-side each broadcast — like `respawnInMs`, not
+      // an absolute epoch timestamp, since comparing an absolute server timestamp against the
+      // client's own `Date.now()` breaks under any client/server clock skew (seen in practice
+      // on mobile devices with an inaccurate system clock: the countdown reads stuck at 0).
+      countdownInMs: number | null;
       score: number;
       pipes: Pipe[];
       players: SnapshotPlayer[];

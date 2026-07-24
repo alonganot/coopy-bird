@@ -8,7 +8,7 @@ export const PLAYER_X = 80;
 export interface MpState {
   you: string | null;
   phase: RoomPhase;
-  countdownEndsAt: number | null;
+  countdownInMs: number | null;
   score: number;
   pipes: Pipe[];
   players: SnapshotPlayer[];
@@ -21,7 +21,7 @@ export interface MpState {
 export const mpState: MpState = {
   you: null,
   phase: 'waiting',
-  countdownEndsAt: null,
+  countdownInMs: null,
   score: 0,
   pipes: [],
   players: [],
@@ -33,7 +33,7 @@ export const mpState: MpState = {
 export function resetMpState(): void {
   mpState.you = null;
   mpState.phase = 'waiting';
-  mpState.countdownEndsAt = null;
+  mpState.countdownInMs = null;
   mpState.score = 0;
   mpState.pipes = [];
   mpState.players = [];
@@ -48,7 +48,7 @@ export function applyServerMessage(msg: ServerMessage): void {
       break;
     case 'snapshot':
       mpState.phase = msg.phase;
-      mpState.countdownEndsAt = msg.countdownEndsAt;
+      mpState.countdownInMs = msg.countdownInMs;
       mpState.score = msg.score;
       mpState.pipes = msg.pipes;
       mpState.players = msg.players;
